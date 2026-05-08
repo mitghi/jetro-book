@@ -1,0 +1,32 @@
+[book]
+authors = ["Mike Taghavi"]
+language = "en"
+src = "src"
+title = "The Jetro Book"
+description = "Query, transform, and patch JSON with the jetro DSL"
+
+[output.html]
+default-theme = "light"
+preferred-dark-theme = "navy"
+git-repository-url = "https://github.com/mitghi/jetro"
+edit-url-template = "https://github.com/mitghi/jetro/edit/main/jetro-book/{path}"
+additional-css = ["theme/extra.css"]
+
+[output.html.fold]
+enable = true
+level = 1
+
+[output.html.playground]
+runnable = false
+
+[output.html.search]
+enable = true
+limit-results = 30
+use-boolean-and = true
+boost-title = 2
+boost-hierarchy = 2
+boost-paragraph = 1
+expand = true
+
+[rust]
+edition = "2021"
