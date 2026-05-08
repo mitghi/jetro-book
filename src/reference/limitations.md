@@ -32,6 +32,8 @@ The 14 audit-surfaced bugs were addressed plus a follow-up sweep:
 - ✅ Wildcard chain modify `$.xs[*].field.modify(@)`.
 - ✅ Object literal as method receiver `{a: 1}.keys()` and `({a: 1}).keys()`.
 - ✅ Regex escape: `"\d"` and `"\\d"` both parse as digit class.
+- ✅ Path-call scalar unwrap: `$.s.upper()` → `"HELLO"` (was `["HELLO"]`). Scalar `OneToOne` builtins on path receivers dispatch directly via `apply_one`; opt out per-builtin with `BuiltinSpec::never_unwrap()`.
+- ✅ `to_json` on array path: `$.users.to_json()` → single JSON document of the array (was per-element JSON strings).
 
 Items below are still outstanding.
 
@@ -155,50 +157,21 @@ $.xs[@.active]        # ✗ index expression
 
 ## 4. Pipeline / runtime semantics
 
-### 4.1 Path-call wrapping
-
-Calling a scalar method on a path returns an **array-wrapped** result:
-
-```text
-DOC:    {"x": 10, "s": "hello"}
-QUERY:  $.x.type()             →  ["number"]    (not "number")
-QUERY:  $.s.upper()             →  ["HELLO"]    (not "HELLO")
-QUERY:  $.x.to_json()           →  ["10"]
-QUERY:  $.s.slice(0, 3)         →  ["hel"]
-```
-
-Calling on a literal scalar does not wrap:
-
-```text
-QUERY:  10.type()               →  "number"
-QUERY:  "hello".upper()         →  "HELLO"
-```
-
-To unwrap a path-call result:
-
-```text
-QUERY:  $.s.upper().first()     →  "HELLO"
-QUERY:  $.x | @.type()          →  "number"
-```
-
-This affects most book examples that show bare-scalar `OUT:` for a query
-rooted at `$`.
-
-### 4.2 `.replace(needle, with)` is single-occurrence
+### 4.1 `.replace(needle, with)` is single-occurrence
 
 ```text
 "hello hello".replace("hello", "hi")          # → "hi hello"  (only first)
 "hello hello".replace_all("hello", "hi")      # → "hi hi"
 ```
 
-### 4.3 `indent(n)` takes an integer count, not a prefix string
+### 4.2 `indent(n)` takes an integer count, not a prefix string
 
 ```text
 "a\nb".indent(2)            # ✓ → "  a\n  b"
 "a\nb".indent("  ")         # ✗ runtime error "expected number argument"
 ```
 
-### 4.4 `from_json` needs a path or `let`-bound receiver
+### 4.3 `from_json` needs a path or `let`-bound receiver
 
 ```text
 "{\"a\":1}".from_json()             # ✗ parse error
@@ -206,23 +179,11 @@ $.s.from_json()                     # ✓
 let s = "{\"a\":1}" in s.from_json() # ✓
 ```
 
-### 4.5 `.to_json()` over an array of objects emits per-element JSON
-
-```text
-$.users.to_json()
-# → ["{\"id\":1,...}", "{\"id\":2,...}"]    (array of JSON strings)
-```
-
-For a single JSON serialisation of the whole array, use the host's encoder
-or `to_json` on the literal array.
-
 ### Fix-list (runtime)
 
-- [ ] Decide canonical scalar-on-path output shape: bare scalar or array. Currently mixed; book assumes bare.
 - [ ] Either alias `replace = replace_all` or document the asymmetry prominently.
 - [ ] Allow `indent` to accept a string prefix (for non-space indents) or rename to `indent_n`.
 - [ ] Allow `from_json` on parenthesized string literal expressions.
-- [ ] Make `to_json` on array context emit single document, not array of docs. Add `to_json_each` if per-element is desired.
 
 ---
 
