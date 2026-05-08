@@ -62,15 +62,17 @@ Ready? Start with the [Quick Tour](./quick-tour.md), or jump to the
 [Builtin Reference](./builtins/overview.md) if you already know jetro and need a
 specific method.
 
-> **One caveat before you read further.** This book documents jetro's
-> **intended** semantics. v0.5 has a number of behavior surprises and a few
-> unsupported builtins; check
-> [Known Limitations](./reference/limitations.md) for the empirically
-> validated reality of the current release before copying queries directly
-> into production. Major ones: scalar method on a path returns an
-> array-wrapped result (`$.x.upper()` → `["FOO"]`); there is no `in`
-> operator (`"x" in xs` is a parse error); regex escapes are *single*
-> backslash (`"\d"`, not `"\\d"`); `replace` replaces only the first
-> occurrence; bare-path inside method args (`.field`) doesn't parse — use
-> `@.field` or a named lambda. The limitations page lists every confirmed
-> issue.
+> **A few v0.5 sharp edges worth noting up front.** This book documents
+> jetro's stable semantics; the behaviours listed below are intentional
+> design choices for v0.5. See
+> [Known Limitations](./reference/limitations.md) for the canonical fix-list.
+> - `replace(needle, with)` replaces **only the first** occurrence
+>   (JavaScript-style); use `replace_all` for substitute-every behaviour.
+> - There is no `in` operator (`"x" in xs` is a parse error) because `in`
+>   doubles as the binder in `let` and `for`; use `xs has "x"` or
+>   `xs.includes("x")` instead.
+> - Regex specials use **single** backslash inside string literals
+>   (`"\d"` works); double-backslash also parses but matches the same
+>   class.
+> - `rec(fn)` caps at 10 000 iterations when the step never reaches a
+>   structural fixpoint; pass `rec(fn, cond)` to bound the loop.

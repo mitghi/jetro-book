@@ -42,9 +42,10 @@ match scrutinee with {
 | `p1 \| p2` | Either |
 | `x: number` | Kind-bind |
 
-> **v0.5 note:** `{id, name}` shorthand and `{k1, k2, ..rest}` rest-capture
-> patterns are not yet supported in the parser — write `{id: i, name: n}`
-> and bind explicitly. See [Limitations](../reference/limitations.md).
+> **v0.5 note:** object shorthand `{id, name}` binds each key to a same-name
+> local, and rest-capture is spelled `...*rest` (object) or `...tail`
+> (array): `{id, name, ...*rest}`, `[h, ...tail]`. See
+> [Limitations](../reference/limitations.md) for the canonical pattern grammar.
 
 ## 1. Discriminated union
 

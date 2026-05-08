@@ -1,14 +1,8 @@
 # A 5-Minute Tour
 
 This page is a working tour of jetro. Every example has a document, a query,
-and an output. Run them in your shell with `jet`, in Rust with `Jetro::collect`,
-or in Python with `jetro.collect`.
-
-> ⚠ **Read first:** scalar method calls on a path expression return an
-> **array-wrapped** result in v0.5 (e.g. `$.x.upper()` → `["FOO"]`, not
-> `"FOO"`). Add `.first()` to unwrap, or use `$.x | @.upper()`. Several
-> grammar forms documented in the wider book are also v0.5-restricted —
-> see [Known Limitations](./reference/limitations.md) for the full list.
+and an output. Run them in your shell with `jetrocli`, in Rust with
+`Jetro::collect`, or in Python with `jetro.collect`.
 
 ## The document for this tour
 
@@ -51,21 +45,22 @@ OUT:    ["Hyperion","Snow Crash"]
 ```
 
 Inside `.filter`, `.map`, and similar method args, the current item is `@`.
-Use `@.field` to walk into it. Bare-path form (`.field`) does not parse in
-arg position — see [Lambdas](./grammar/lambdas.md).
+Use `@.field` to walk into it; the leading-dot shorthand `.field` is also
+accepted and desugars to `@.field`.
 
-## 4. Three lambda forms
+## 4. Four lambda forms
 
 These are all equivalent:
 
 ```text
 $.books.filter(@.year > 1980)
+$.books.filter(.year > 1980)
 $.books.filter(b => b.year > 1980)
 $.books.filter(lambda b: b.year > 1980)
 ```
 
-Pick whichever reads best. The named-lambda forms compile to identical
-bytecode; benchmarks confirm them perf-equal to the `@`-form.
+Pick whichever reads best. The named-lambda and `@`-forms compile to
+identical bytecode; benchmarks confirm them perf-equal.
 
 ## 5. Reducers
 

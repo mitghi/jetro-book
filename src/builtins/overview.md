@@ -58,16 +58,15 @@ When a method appears under multiple categories (e.g. `.find` is both a
 filter and positional), it lives in the most specific chapter and is
 cross-linked.
 
-## Not yet supported
+## Sharp edges
 
-A handful of builtins are catalogued in the dispatch enum but not yet wired
-through the runtime in v0.5: **`accumulate`**, **`partition`** (in chained
-form), **`zip_shape`**, **`group_shape`**, **`approx_count_distinct`**.
-Plus **`rec`**, **`missing`**, and `get_path` with nested
-paths have known behavioral bugs. See
-[Known Limitations](../reference/limitations.md) for workarounds and the
-full list of v0.5 surprises (path-call wrapping, regex escape semantics,
-pattern-match shorthand, list-comp over `$.path`, etc.).
+A small set of v0.5 design choices is documented in
+[Known Limitations](../reference/limitations.md): `replace` is
+single-occurrence (use `replace_all` for substitute-every), there is no
+`in` operator (use `xs has v`), and `rec(fn)` caps at 10 000 iterations
+when the step never converges (use `rec(fn, cond)` to bound). Two engine
+items remain on the fix-list: `rec()` no-arg and a stronger
+runaway-iteration guard.
 
 ## Aliases at a glance
 

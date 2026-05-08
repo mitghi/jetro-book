@@ -23,8 +23,14 @@ $.users.map(@.name)
 $.xs{@.active}                  # inline filter must also use @
 ```
 
-Bare paths like `.age` inside method args **do not parse** — use `@.age`
-or a named lambda. This is the most concise form.
+Leading-dot shorthand `.age` inside method args desugars to `@.age` — the
+two forms are equivalent and the planner sees identical opcodes.
+
+```text
+$.users.filter(.age >= 18)
+$.users.map(.name)
+$.xs{.active}                    # works inside inline filters too
+```
 
 ## Arrow-form named lambda
 
