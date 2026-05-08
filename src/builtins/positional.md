@@ -62,7 +62,7 @@ QUERY:  [10,20,30,40].nth(-1)     OUT: 40
   Useful for "exactly one user with this id" shapes.
 
 ```text
-QUERY:  $.users.find_one(@.id == 42)
+QUERY:  $.users.find_one(@.id == 1)
 ```
 
 ## `collect`

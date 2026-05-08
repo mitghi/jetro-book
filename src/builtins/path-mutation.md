@@ -117,7 +117,9 @@ a `patch` and operates on the rooted document path.
   result back.
 
 ```text
+DOC:    {"counters": {"visits": 10}}
 QUERY:  $.update("counters/visits", @ + 1)
+OUT:    {"counters":{"visits":11}}
 ```
 
 ## Worked example

@@ -122,15 +122,15 @@ let p = $.user.profile in
 ### Heavy lambdas in barriers
 
 ```text
-$.rows.unique_by(@.expensive_compute())
+$.rows.unique_by(@.to_string())
 ```
 
-`unique_by` calls the lambda once per row. If `expensive_compute` is
+`unique_by` calls the lambda once per row. If the projection is
 non-trivial (regex, deep traversal), pre-project once:
 
 ```text
-$.rows.map(r => r.merge({_k: r.expensive_compute()}))
-     .unique_by(@.k)
+$.rows.map(r => r.merge({_k: r.to_string()}))
+     .unique_by(@._k)
      .map(@.omit(_k))
 ```
 

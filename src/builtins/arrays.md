@@ -87,8 +87,8 @@ QUERY:  [1,2,3].zip_longest(["a"], "x") OUT: [[1,"a"],[2,"x"],[3,"x"]]
 
 ```text
 DOC:    {"x": 10}
-QUERY:  $.fanout(@ * 2, @ + 1, @.to_string())
-OUT:    [20, 11, "10"]
+QUERY:  $.x.fanout(@ * 2, @ + 1, @.to_string())
+OUT:    [20,11,"10"]
 ```
 
 Useful for building multi-shape projections without repeating subexpressions.
@@ -141,5 +141,5 @@ $.events.reverse().take(5)
 [1,2,3].zip_longest(["a","b"], "?")     # → [[1,"a"],[2,"b"],[3,"?"]]
 
 # Run several projections at once
-$.metric.fanout(@ * 2, @ + 1, @ - 1)    # → [v*2, v+1, v-1]
+$.metric.value.fanout(@ * 2, @ + 1, @ - 1)    # → [v*2, v+1, v-1]
 ```
