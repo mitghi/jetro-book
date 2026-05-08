@@ -155,12 +155,30 @@
         };
     });
 
-    // Re-highlight any blocks the original mdbook pass already touched
-    // before our language was registered. `hljs.highlightAll()` is
-    // idempotent: it skips already-highlighted blocks unless the
-    // `data-highlighted` attr is cleared.
-    document.querySelectorAll('pre code.language-jetro').forEach(function (el) {
-        el.removeAttribute('data-highlighted');
-        hljs.highlightElement(el);
-    });
+    // mdbook injects this script *after* `book.js`, which means the
+    // bundled `hljs.highlightBlock` loop has already classified every
+    // code block — using `language-jetro` it could not resolve at the
+    // time. Walk those blocks now: capture the source from the
+    // `data-source` attribute (set on first pass) or `textContent`,
+    // strip prior highlighting, and rerun `highlightBlock` against the
+    // freshly-registered grammar.
+    function relight() {
+        var blocks = document.querySelectorAll('pre code.language-jetro');
+        for (var i = 0; i < blocks.length; i++) {
+            var el = blocks[i];
+            var src = el.getAttribute('data-source') || el.textContent;
+            el.setAttribute('data-source', src);
+            // Reset to the raw text so highlightBlock sees source, not
+            // the existing `<span>` tree from the previous pass.
+            el.textContent = src;
+            el.classList.remove('hljs');
+            hljs.highlightBlock(el);
+        }
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', relight);
+    } else {
+        relight();
+    }
 })();
