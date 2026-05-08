@@ -63,7 +63,7 @@ cross-linked.
 A handful of builtins are catalogued in the dispatch enum but not yet wired
 through the runtime in v0.5: **`accumulate`**, **`partition`** (in chained
 form), **`zip_shape`**, **`group_shape`**, **`approx_count_distinct`**.
-Plus **`rec`**, **`update`**, **`missing`**, and `get_path` with nested
+Plus **`rec`**, **`missing`**, and `get_path` with nested
 paths have known behavioral bugs. See
 [Known Limitations](../reference/limitations.md) for workarounds and the
 full list of v0.5 surprises (path-call wrapping, regex escape semantics,

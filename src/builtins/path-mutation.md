@@ -106,21 +106,106 @@ OUT:    {"a/b":1,"a/c":2}
 The chain-write terminal `$.path.set(v)` is **different** — it's parsed as
 a `patch` and operates on the rooted document path.
 
-## `update(path, fn)`
+## `update`
 
-> ⚠ **Broken in v0.5** — empirically returns the path string instead of the
-> patched document. Avoid until fixed. Use `$.path.modify(fn)` chain-write
-> form (see [Patch](../grammar/patch.md)) for equivalent semantics.
+`update` is jetro's **functional batched update**. Two surfaces:
 
-- **Signature (intended):** `Any, String, (Any -> Any) -> Any`
-- **Behavior (intended):** Apply `fn` to the value at `path`, write the
-  result back.
+### Object body — `update({k: expr, ...})`
+
+Apply a set of field updates to one or more selected subtrees. Plain keys
+update fields *below* the receiver; quoted keys carry full paths.
 
 ```text
-DOC:    {"counters": {"visits": 10}}
-QUERY:  $.update("counters/visits", @ + 1)
-OUT:    {"counters":{"visits":11}}
+DOC:    {"books": [
+  {"title": "Dune", "year": 1965, "tags": ["sf"]},
+  {"title": "Hyperion", "year": 1989, "tags": ["sf", "hugo"]}
+]}
+
+QUERY:  $.books[*].update({tags: tags.append("test"), reviewed: true})
+OUT:    {"books":[{"reviewed":true,"tags":["sf","test"],"title":"Dune","year":1965},{"reviewed":true,"tags":["sf","hugo","test"],"title":"Hyperion","year":1989}]}
 ```
+
+Each selected book gets both fields written. Plain identifiers (`tags`,
+`reviewed`) are read against the **selected snapshot** — not the
+mid-batch document — so two ops on the same target both see the original
+field values.
+
+**Body forms:**
+
+| Form | Meaning |
+|---|---|
+| `field: expr` | Write `expr` into `field` of each selected target |
+| `"a.b.c": expr` | Write into a nested path inside each selected target |
+| `"books[*].tags": expr` | Quoted **path key** — full root-relative path with wildcards/filters |
+| `field: expr when cond` | Skip when `cond` is falsy |
+| `field: DELETE` | Remove the field (with optional `when`) |
+
+`@` inside the body is the current value at the *target field* (handy
+inside path keys); `$` is the original root.
+
+```text
+QUERY:  $.books[*].update({tags: tags.append("modern") when year > 1980})
+OUT:    {"books":[{"tags":["sf"],"title":"Dune","year":1965},{"tags":["sf","hugo","modern"],"title":"Hyperion","year":1989}]}
+```
+
+### Root-level batch with quoted paths
+
+When the receiver is `$`, quoted keys carry full paths, including
+wildcards and `DELETE`:
+
+```text
+QUERY:  $.update({"books[*].tags": @.append("test"), active: false})
+DOC:    {"books": [{"tags": ["sf"]}], "active": true}
+OUT:    {"active":false,"books":[{"tags":["sf","test"]}]}
+```
+
+```text
+DOC:    {"users": [{"id":1,"secret":"a"}, {"id":2,"secret":"b"}]}
+QUERY:  $.update({"users[*].secret": DELETE})
+OUT:    {"users":[{"id":1},{"id":2}]}
+```
+
+### Filtered wildcard `[* if pred]`
+
+Both selectors and quoted path keys support a filtered wildcard:
+
+```text
+DOC:    {"books": [
+  {"title": "Dune", "year": 1965, "tags": ["sf"]},
+  {"title": "Hyperion", "year": 1989, "tags": ["sf"]}
+]}
+
+QUERY:  $.books[* if year > 1980].update({tags: tags.append("modern")})
+OUT:    {"books":[{"tags":["sf"],"title":"Dune","year":1965},{"tags":["sf","modern"],"title":"Hyperion","year":1989}]}
+
+QUERY:  $.update({"books[* if year > 1980].tags": @.append("modern")})
+OUT:    {"books":[{"tags":["sf"],"title":"Dune","year":1965},{"tags":["sf","modern"],"title":"Hyperion","year":1989}]}
+```
+
+### Two-argument path form — `update(path, expr)`
+
+The classic shape: a slash- or dot-separated path plus an expression.
+`@` inside the expression is the current value at `path`.
+
+```text
+DOC:    {"counters": {"visits": 10, "clicks": 3}}
+QUERY:  $.update("counters.visits", @ + 1)
+OUT:    {"counters":{"clicks":3,"visits":11}}
+
+QUERY:  $.update("counters/visits", @ + 1)
+OUT:    {"counters":{"clicks":3,"visits":11}}
+```
+
+### Semantics
+
+| Property | Behavior |
+|---|---|
+| **Snapshot reads** | Each body expression sees the pre-batch values, not partial mid-batch state |
+| **Order** | Ops apply in source order — last write wins on overlap |
+| **Selectors** | Index, wildcard `[*]`, filtered wildcard `[* if pred]`, nested chains all OK |
+| **Scalar targets** | An update with object body promotes scalar elements to objects (`{seen: true}` over `[1,2]` → `[{seen:true},{seen:true}]`) |
+| **Untouched subtrees** | Preserved by `Arc` sharing — no deep copy of unrelated fields |
+| **Empty body** | `.update({})` is a no-op — returns the doc unchanged |
 
 ## Worked example
 

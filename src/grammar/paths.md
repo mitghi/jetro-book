@@ -85,6 +85,30 @@ OUT:    [10,20,30,40]
 `[*]` is "every element". Most users prefer chained methods (`.filter`,
 `.map`) which already iterate.
 
+### Filtered wildcard `[* if pred]`
+
+A predicated wildcard — keeps only elements satisfying `pred` (with `@`
+bound to the candidate).
+
+```text
+DOC:    {"books": [{"title": "Dune", "year": 1965}, {"title": "Hyperion", "year": 1989}]}
+QUERY:  $.books[* if year > 1980]
+OUT:    [{"title":"Hyperion","year":1989}]
+```
+
+Equivalent to `[*]` immediately followed by an inline-filter `{cond}`,
+but stays on the path side of parsing. Particularly useful inside
+`.update` selectors and quoted patch path keys (see
+[Patch](./patch.md#filtered-wildcard--if-pred)).
+
+Chaining a bare field step after a filtered wildcard collapses to
+`null` — chain a method instead:
+
+```text
+QUERY:  $.books[* if year > 1980].map(@.title)
+OUT:    ["Hyperion"]
+```
+
 ## Inline filter
 
 `{predicate}` after a path step keeps only matching elements:
@@ -190,6 +214,7 @@ Top-level paths still need `$`.
 | Index | `[3]`, `[-1]` | Negative counts from end |
 | Slice | `[1:5]`, `[::2]` | Half-open like Python |
 | Wildcard | `[*]` | Whole array |
+| Filtered wildcard | `[* if pred]` | Wildcard restricted by predicate (`@` = element) |
 | Descendant | `..name`, `..` | DFS pre-order |
 | Inline filter | `{cond}` | Sugar for `.filter` |
 | Dynamic key | `[expr]` | Expression resolves to key |

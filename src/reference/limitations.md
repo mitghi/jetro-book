@@ -70,7 +70,6 @@ Execute without erroring but produce wrong results.
 | Method | Symptom | Workaround |
 |---|---|---|
 | `rec` | `"rec: exceeded 10000 iterations without reaching fixpoint"` even on simple inputs | `walk` / `walk_pre` with manual shape check |
-| `update(path, fn)` | Returns the path string instead of the patched doc | `$.path.modify(fn)` chain-write |
 | `missing(...keys)` | Always returns `false` instead of the missing-keys array | `["k1","k2"].filter(k => not $.has_path(k))` |
 | `get_path("a/b/c")` | Resolves only single-key paths; nested slash/dot returns null | Direct path navigation `$.a.b.c` (literal); for dynamic, walk manually with chained `[expr]` |
 | `dedent()` | Strips first line's prefix from matching subsequent lines, **not** common-leading-whitespace | Hand-process if true dedent needed |
@@ -82,7 +81,6 @@ Execute without erroring but produce wrong results.
 ### Fix-list (engine)
 
 - [ ] Fix `Rec` fixpoint detection — compare structurally, bound iteration safely.
-- [ ] Fix `Update` to return patched document, not path string.
 - [ ] Fix `Missing` to compute and return the actual missing-keys list.
 - [ ] Implement multi-segment slash/dot paths in `get_path` / `del_path`.
 - [ ] Make `dedent()` strip common leading whitespace per Python `textwrap.dedent` semantics.

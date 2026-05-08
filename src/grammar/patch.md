@@ -129,6 +129,64 @@ The planner detects multi-write patterns and routes them through the
 **patch-fusion** optimizer, which lowers repeated path traversals into a
 single fused write pass.
 
+## Functional `.update({...})`
+
+A third surface, written as a method call:
+
+```text
+DOC:    {"books": [
+  {"title": "Dune", "year": 1965, "tags": ["sf"]},
+  {"title": "Hyperion", "year": 1989, "tags": ["sf"]}
+]}
+
+QUERY:  $.books[*].update({tags: tags.append("modern") when year > 1980, reviewed: true})
+OUT:    {"books":[{"reviewed":true,"tags":["sf"],"title":"Dune","year":1965},{"reviewed":true,"tags":["sf","modern"],"title":"Hyperion","year":1989}]}
+```
+
+Use `.update` when you want all of the following at once:
+
+- A **selector** chosen with chain syntax (`$.books[*]`,
+  `$.books[* if year > 1980]`)
+- An object body listing **multiple field updates** evaluated against
+  each selected snapshot
+- The same `when` / `DELETE` semantics as `patch $ { ... }`
+- Quoted **path keys** (`"books[*].tags"`) when the receiver is `$`,
+  giving root-level batched updates without an explicit selector
+
+`.update` parses to its own AST node (`UpdateBatch`) so the planner can
+keep the user-level shape — useful for selector pushdown, demand
+analysis, and fusion. See
+[Path Mutation → `update`](../builtins/path-mutation.md#update) for the
+full argument matrix.
+
+## Filtered wildcard `[* if pred]`
+
+A predicated wildcard inside a path. Available wherever `[*]` is, and
+particularly useful inside `.update` selectors and quoted path keys:
+
+```text
+DOC:    {"books": [
+  {"title": "Dune", "year": 1965},
+  {"title": "Hyperion", "year": 1989}
+]}
+
+QUERY:  $.books[* if year > 1980]
+OUT:    [{"title":"Hyperion","year":1989}]
+```
+
+The predicate runs against `@` = the candidate element. Falsy elements
+are skipped from the path traversal entirely.
+
+## Wildcard `.modify` chains
+
+Wildcard chain-writes are now lowered to a fused patch:
+
+```text
+DOC:    {"books": [{"tags": ["sf"]}, {"tags": ["hugo"]}]}
+QUERY:  $.books[*].tags.modify(@.append("test"))
+OUT:    {"books":[{"tags":["sf","test"]},{"tags":["hugo","test"]}]}
+```
+
 ## Caveats
 
 - `.replace(needle, with)` is **not** a write terminal — it is the
