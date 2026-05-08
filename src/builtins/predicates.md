@@ -7,14 +7,14 @@ Tests and small helpers.
 - **Signature:** `Any, Any -> Any`
 - **Behavior:** If self is null, return `default`. Otherwise return self.
 
-```text
+```jetro
 QUERY:  null.or("default")     OUT: "default"
 QUERY:  "hi".or("default")     OUT: "hi"
 ```
 
 Equivalent to `?? default` but reads better in chains:
 
-```text
+```jetro
 $.user.name.or("anon")
 ```
 
@@ -24,7 +24,7 @@ $.user.name.or("anon")
 - **Behavior:** True if the key exists (objects) or index is in range
   (arrays).
 
-```text
+```jetro
 QUERY:  {"a":1,"b":2}.has("a")     OUT: true
 QUERY:  {"a":1}.has("b")     OUT: false
 QUERY:  [1,2,3].has(2)     OUT: true
@@ -52,7 +52,7 @@ from this method.
 - **Signature:** `Array|String, Any -> Bool`
 - **Behavior:** Membership.
 
-```text
+```jetro
 QUERY:  [1,2,3].includes(2)           OUT: true
 QUERY:  "hello".includes("ell")       OUT: true
 ```
@@ -62,7 +62,7 @@ QUERY:  "hello".includes("ell")       OUT: true
 - **Signature:** `Array|String, Any -> Number | null`
 - **Behavior:** Index of first occurrence; null if not found.
 
-```text
+```jetro
 QUERY:  [10,20,30].index(20)          OUT: 1
 QUERY:  [10,20,30].index(99)          OUT: null
 ```
@@ -74,7 +74,7 @@ For strings, see also `index_of` in [String Search](./string-search.md).
 - **Signature:** `Array|String, Any -> Array<Number>`
 - **Behavior:** All indices of `value`.
 
-```text
+```jetro
 QUERY:  [1,2,3,2,1].indices_of(2)
 OUT:    [1, 3]
 ```
@@ -92,7 +92,7 @@ OUT:    [1, 3]
 
 ## Practical examples
 
-```text
+```jetro
 # Default for missing field
 $.user.email.or("no-email@example.com")
 

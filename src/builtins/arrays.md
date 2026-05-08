@@ -4,7 +4,7 @@
 
 Examples below run against:
 
-```text
+```jetro
 DOC:    {"users": [{"id": 1, "name": "Ada", "email": "ada@x.com", "active": true, "age": 30, "role": "admin", "secret": "a", "is_admin": true, "profile": {"name": "Ada", "email": "ada@x.com"}, "score": 85, "first_name": "Ada", "last_name": "Lovelace", "tags": ["math", "code"]}, {"id": 2, "name": "Bob", "email": "bob@y.org", "active": false, "age": 24, "role": "user", "secret": "b", "is_admin": false, "profile": {"name": "Bob", "email": "bob@y.org"}, "score": 40, "first_name": "Bob", "last_name": "Smith"}, {"id": 3, "name": "Cy", "email": "cy@x.com", "active": true, "age": 42, "role": "user", "secret": "c", "is_admin": false, "score": 90, "first_name": "Cy", "last_name": "Young"}], "user": {"id": 42, "name": "Ada", "email": "ada@x.com", "tags": ["math", "code"], "profile": {"name": "Ada", "email": "ada@x.com"}, "active": true, "verified": true}, "events": [{"sev": 1, "msg": "ok", "kind": "start"}, {"sev": 2, "msg": "warn", "kind": "end"}, {"sev": 3, "msg": "err", "kind": "start"}], "metric": {"pct": 0.5, "value": 7, "x": 10}, "tags_today": ["a", "b", "c"], "tags_yesterday": ["b", "c", "d"], "left_tags": ["a", "b", "c"], "right_tags": ["b", "c", "d"]}
 ```
 
@@ -16,7 +16,7 @@ arrays).
 - **Signature:** `Array<A> -> Array<A>`
 - **Behavior:** Add `v` to the end / front.
 
-```text
+```jetro
 QUERY:  [1,2,3].append(4)     OUT: [1,2,3,4]
 QUERY:  [1,2,3].prepend(0)     OUT: [0,1,2,3]
 ```
@@ -30,7 +30,7 @@ document — see [Patch](../grammar/patch.md).
 - **Behavior:** Reverse element order. Also works on strings (calls
   `reverse_str`).
 
-```text
+```jetro
 QUERY:  [1,2,3].reverse()     OUT: [3,2,1]
 QUERY:  "abc".reverse()     OUT: ["abc"]
 ```
@@ -43,7 +43,7 @@ QUERY:  "abc".reverse()     OUT: ["abc"]
 | `intersect(other)` | Elements in both |
 | `union(other)` | Elements in either, deduped |
 
-```text
+```jetro
 QUERY:  [1,2,3,4].diff([3,4,5])     OUT: [1,2]
 QUERY:  [1,2,3,4].intersect([3,4,5])     OUT: [3,4]
 QUERY:  [1,2,3].union([3,4,5])     OUT: [1,2,3,4,5]
@@ -57,7 +57,7 @@ the left operand.
 - **Signature:** `Array<String> -> String`
 - **Behavior:** Concatenate strings with separator.
 
-```text
+```jetro
 QUERY:  ["a","b","c"].join(", ")
 OUT:    "a, b, c"
 
@@ -71,7 +71,7 @@ For non-string elements, lift with `.map(@.to_string())` first.
 - **Signature:** `Array<A>, Array<B> -> Array<[A, B]>`
 - **Behavior:** Pair element-wise.
 
-```text
+```jetro
 QUERY:  [1,2,3].zip(["a","b","c"])
 OUT:    [[1,"a"],[2,"b"],[3,"c"]]
 
@@ -85,7 +85,7 @@ QUERY:  [1,2,3].zip_longest(["a"], "x") OUT: [[1,"a"],[2,"x"],[3,"x"]]
 - **Signature:** `A -> Array<...>`
 - **Behavior:** Apply each lambda to the same input; collect results.
 
-```text
+```jetro
 DOC:    {"x": 10}
 QUERY:  $.x.fanout(@ * 2, @ + 1, @.to_string())
 OUT:    [20,11,"10"]
@@ -112,7 +112,7 @@ Set operations and `join` are barriers (they consume both inputs fully).
 
 ## Practical examples
 
-```text
+```jetro
 # Add an item to a tag list
 $.user.tags.append("admin")             # patches the doc
 

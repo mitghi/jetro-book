@@ -4,7 +4,7 @@
 
 Examples below run against:
 
-```text
+```jetro
 DOC:    {"users": [{"id": 1, "name": "Ada", "email": "ada@x.com", "active": true, "age": 30, "role": "admin", "secret": "a", "is_admin": true, "profile": {"name": "Ada", "email": "ada@x.com"}, "score": 85, "first_name": "Ada", "last_name": "Lovelace", "tags": ["math", "code"]}, {"id": 2, "name": "Bob", "email": "bob@y.org", "active": false, "age": 24, "role": "user", "secret": "b", "is_admin": false, "profile": {"name": "Bob", "email": "bob@y.org"}, "score": 40, "first_name": "Bob", "last_name": "Smith"}, {"id": 3, "name": "Cy", "email": "cy@x.com", "active": true, "age": 42, "role": "user", "secret": "c", "is_admin": false, "score": 90, "first_name": "Cy", "last_name": "Young"}], "books": [{"title": "Dune", "year": 1965, "author": "Herbert", "tags": ["sf"], "price": 15, "genre": "sci-fi"}, {"title": "Foundation", "year": 1951, "author": "Asimov", "tags": ["sf", "hugo"], "price": 10, "genre": "sci-fi"}, {"title": "Hyperion", "year": 1989, "author": "Simmons", "tags": ["sf", "hugo"], "price": 18, "genre": "cyberpunk"}, {"title": "Snow Crash", "year": 1992, "author": "Stephenson", "tags": ["sf", "cyberpunk"], "price": 12, "genre": "cyberpunk"}], "records": [{"id": 1, "name": "a", "email": "x@y.com"}, {"id": 2, "name": "b", "email": "u@v.com"}], "daily": [{"day": 1, "value": 10}, {"day": 2, "value": 12}]}
 ```
 
@@ -19,7 +19,7 @@ materialise. Place them late in pipelines when possible.
 - **Behavior:** Stable ascending sort. With a projection, sorts by the
   projected key.
 
-```text
+```jetro
 QUERY:  [3,1,4,1,5].sort()
 OUT:    [1,1,3,4,5]
 
@@ -38,7 +38,7 @@ Multi-arg form sorts by a tuple of keys.
 - **Behavior:** Remove duplicates by structural equality, preserving first
   occurrence order.
 
-```text
+```jetro
 QUERY:  [3,1,4,1,5,9,2,6,5].unique()
 OUT:    [3,1,4,5,9,2,6]
 ```
@@ -48,7 +48,7 @@ OUT:    [3,1,4,5,9,2,6]
 - **Signature:** `Array<A> -> Array<A>`
 - **Behavior:** Dedup by projected key.
 
-```text
+```jetro
 QUERY:  $.books.unique_by(@.author)
 ```
 
@@ -59,7 +59,7 @@ QUERY:  $.books.unique_by(@.author)
 - **Signature:** `Array<A> -> Object<KeyString, Array<A>>`
 - **Behavior:** Bucket by projected key.
 
-```text
+```jetro
 QUERY:  $.books.group_by(@.author)
 OUT:    {"null":[null]}
 ```
@@ -69,7 +69,7 @@ OUT:    {"null":[null]}
 - **Signature:** `Array<A> -> Object<KeyString, Number>`
 - **Behavior:** Bucket counts.
 
-```text
+```jetro
 QUERY:  $.books.count_by(@.author)
 OUT:    [null]
 ```
@@ -79,7 +79,7 @@ OUT:    [null]
 - **Signature:** `Array<A> -> Object<KeyString, A>`
 - **Behavior:** Index by key. Last wins on collision.
 
-```text
+```jetro
 QUERY:  $.users.index_by(@.id)
 OUT:    [null]
 ```
@@ -111,7 +111,7 @@ OUT:    [null]
 - **Signature:** `Array<A> -> Array<Array<A>>`
 - **Behavior:** Sliding window of `size`.
 
-```text
+```jetro
 QUERY:  [1,2,3,4,5].window(3)
 OUT:    [[1,2,3],[2,3,4],[3,4,5]]
 ```
@@ -121,7 +121,7 @@ OUT:    [[1,2,3],[2,3,4],[3,4,5]]
 - **Signature:** `Array<A> -> Array<Array<A>>`
 - **Behavior:** Non-overlapping chunks. Last chunk may be shorter.
 
-```text
+```jetro
 QUERY:  [1,2,3,4,5,6,7].chunk(3)
 OUT:    [[1,2,3],[4,5,6],[7]]
 ```
@@ -135,7 +135,7 @@ OUT:    [[1,2,3],[4,5,6],[7]]
 | `rolling_min(n)` | Min over a window |
 | `rolling_max(n)` | Max over a window |
 
-```text
+```jetro
 QUERY:  [1,2,3,4,5].rolling_sum(3)
 OUT:    [null,null,6.0,9.0,12.0]
 ```
@@ -171,7 +171,7 @@ You don't need a barrier for:
 
 ## Practical examples
 
-```text
+```jetro
 DOC:    {"books":[
   {"title":"Dune","year":1965,"author":"Herbert","price":15},
   {"title":"Foundation","year":1951,"author":"Asimov","price":10},

@@ -6,7 +6,7 @@ does.
 
 ## 1. Top-N by aggregate
 
-```text
+```jetro
 DOC:    {"sales": [
   {"region": "NA", "amount": 100},
   {"region": "EU", "amount": 200},
@@ -31,7 +31,7 @@ the sort must complete first. Push the demand earlier where possible.
 
 ## 2. Active users + role-based count
 
-```text
+```jetro
 DOC:    {"users": [
   {"id":1,"role":"admin","active":true},
   {"id":2,"role":"user","active":false},
@@ -52,7 +52,7 @@ rest of the user object is never decoded.
 
 ## 3. Histogram of word frequency
 
-```text
+```jetro
 DOC:    {"text": "the quick brown fox jumps over the lazy dog the end"}
 
 QUERY:  $.text
@@ -65,7 +65,7 @@ OUT:    {"the": 3, "quick": 1, "brown": 1, ...}
 
 ## 4. Customer order summary
 
-```text
+```jetro
 QUERY:  $.orders
           .group_by(@.customer_id)
           .entries()
@@ -82,7 +82,7 @@ QUERY:  $.orders
 The inner `.sort(@.date).last()` is wasteful: it sorts every group to grab
 the last. Rewrite with `max_by`:
 
-```text
+```jetro
 QUERY:  ...
           .map(([cid, orders]) => {
             customer_id: cid,
@@ -94,7 +94,7 @@ QUERY:  ...
 
 ## 5. Unique recent active sessions
 
-```text
+```jetro
 QUERY:  $.events
           .filter(@.kind == "login" and .at >= "2026-01-01")
           .map(@.user_id)
@@ -104,7 +104,7 @@ QUERY:  $.events
 
 ## 6. Pretty-print a CSV from objects
 
-```text
+```jetro
 QUERY:  $.users
           .filter(@.active)
           .map(u => u.pick(id: id, name: full_name, email))
@@ -114,7 +114,7 @@ QUERY:  $.users
 
 ## 7. Find a needle in a deep document
 
-```text
+```jetro
 QUERY:  $..find(@.id == 42)
 ```
 
@@ -123,7 +123,7 @@ index — no full traversal.
 
 ## 8. Compute deltas with `pairwise`
 
-```text
+```jetro
 DOC:    {"prices": [100, 105, 102, 110, 108]}
 
 QUERY:  $.prices.pairwise().map(([a, b]) => b - a)
@@ -132,7 +132,7 @@ OUT:    [5,-3,8,-2]
 
 ## 9. Rolling 3-point moving average
 
-```text
+```jetro
 QUERY:  $.measurements.rolling_avg(3)
 ```
 
@@ -140,7 +140,7 @@ The first two outputs are `null` until the window fills.
 
 ## 10. Build a lookup, then enrich
 
-```text
+```jetro
 QUERY:  let by_id = $.users.index_by(@.id) in
           $.events.map(e => e.merge({user: by_id[e.user_id].name}))
 ```
@@ -149,13 +149,13 @@ QUERY:  let by_id = $.users.index_by(@.id) in
 
 ## 11. Select rows with all required fields
 
-```text
+```jetro
 QUERY:  $.records.filter(r => r.missing("id", "name", "email").count() == 0)
 ```
 
 ## 12. Re-shape a long-format table
 
-```text
+```jetro
 DOC:    [
   {"y":2024,"q":1,"v":10},{"y":2024,"q":2,"v":20},
   {"y":2025,"q":1,"v":15},{"y":2025,"q":2,"v":25}
@@ -166,13 +166,13 @@ OUT:    {"2024":{"1":10,"2":20},"2025":{"1":15,"2":25}}
 
 ## 13. Mask sensitive fields
 
-```text
+```jetro
 QUERY:  $.users.map(u => u.omit("password", "ssn", "token"))
 ```
 
 ## 14. Delta + cumulative sum
 
-```text
+```jetro
 QUERY:  $.daily.pairwise().map(([a, b]) => b.value - a.value)
 ```
 
@@ -186,7 +186,7 @@ QUERY:  $.daily.pairwise().map(([a, b]) => b.value - a.value)
 > ⚠ `rec` is unstable in v0.5 (fixpoint loop bug). For now, prefer
 > `walk` / `walk_pre` with a manual shape check, or do the rewrite host-side.
 
-```text
+```jetro
 QUERY (planned, currently broken):
   $.rec({type: "v1"}, doc =>
     doc.merge({type: "v2"})

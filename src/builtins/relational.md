@@ -4,7 +4,7 @@
 
 Examples below run against:
 
-```text
+```jetro
 DOC:    {"orders": [{"id": 1, "customer": 1, "customer_id": 1, "cid": 1, "amount": 100, "status": "paid", "total": 100, "date": "2024-01-01"}, {"id": 2, "customer": 1, "customer_id": 1, "cid": 1, "amount": 50, "status": "open", "total": 50, "date": "2024-02-01"}, {"id": 3, "customer": 2, "customer_id": 2, "cid": 2, "amount": 75, "status": "paid", "total": 75, "date": "2024-03-01"}], "customers": [{"id": 1, "name": "Ada", "email": "ada@x.com"}, {"id": 2, "name": "Bob", "email": "bob@y.org"}], "left": [{"id": 1, "name": "Ada"}, {"id": 2, "name": "Bob"}], "right": [{"uid": 1, "role": "admin"}, {"uid": 2, "role": "user"}], "events": [{"sev": 1, "msg": "ok", "kind": "start"}, {"sev": 2, "msg": "warn", "kind": "end"}, {"sev": 3, "msg": "err", "kind": "start"}]}
 ```
 
@@ -17,7 +17,7 @@ Operations that combine two arrays of objects on a key.
   `l[leftKey] == r[rightKey]`, emit a result. If `fn` is omitted, the result
   is the merged object `l.merge(r)`.
 
-```text
+```jetro
 LEFT:   [{"id":1,"name":"Ada"},{"id":2,"name":"Bob"}]
 RIGHT:  [{"uid":1,"role":"admin"},{"uid":2,"role":"user"}]
 
@@ -34,7 +34,7 @@ OUT:    [{"name":"Ada","role":"admin"},{"name":"Bob","role":"user"}]
 
 ## Worked example: orders + customers
 
-```text
+```jetro
 DOC:
 {
   "customers": [
@@ -85,21 +85,21 @@ OUT:
 
 For "many left rows, lookup one field on each":
 
-```text
+```jetro
 $.orders.map(o => o.merge({customer_name: $.customers.find(@.id == o.customer).name}))
 ```
 
 This nested `find` is O(n×m) — fine for small data. For large data, use
 `equi_join` (O(n+m)) or build a lookup table first:
 
-```text
+```jetro
 let by_id = $.customers.index_by(@.id) in
   $.orders.map(o => o.merge({customer_name: by_id[o.customer].name}))
 ```
 
 ## Practical examples
 
-```text
+```jetro
 # Enrich orders with customer info
 $.orders.equi_join($.customers, "customer_id", "id")
 

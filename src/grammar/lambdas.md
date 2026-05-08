@@ -4,7 +4,7 @@
 
 Examples below run against:
 
-```text
+```jetro
 DOC:    {"users": [{"id": 1, "name": "Ada", "email": "ada@x.com", "active": true, "age": 30, "role": "admin", "secret": "a", "is_admin": true, "profile": {"name": "Ada", "email": "ada@x.com"}, "score": 85, "first_name": "Ada", "last_name": "Lovelace", "tags": ["math", "code"]}, {"id": 2, "name": "Bob", "email": "bob@y.org", "active": false, "age": 24, "role": "user", "secret": "b", "is_admin": false, "profile": {"name": "Bob", "email": "bob@y.org"}, "score": 40, "first_name": "Bob", "last_name": "Smith"}, {"id": 3, "name": "Cy", "email": "cy@x.com", "active": true, "age": 42, "role": "user", "secret": "c", "is_admin": false, "score": 90, "first_name": "Cy", "last_name": "Young"}], "books": [{"title": "Dune", "year": 1965, "author": "Herbert", "tags": ["sf"], "price": 15, "genre": "sci-fi"}, {"title": "Foundation", "year": 1951, "author": "Asimov", "tags": ["sf", "hugo"], "price": 10, "genre": "sci-fi"}, {"title": "Hyperion", "year": 1989, "author": "Simmons", "tags": ["sf", "hugo"], "price": 18, "genre": "cyberpunk"}, {"title": "Snow Crash", "year": 1992, "author": "Stephenson", "tags": ["sf", "cyberpunk"], "price": 12, "genre": "cyberpunk"}], "xs": [1, 2, 3, 4, 5], "pairs": [["a", 1], ["b", 2], ["c", 3]]}
 ```
 
@@ -17,7 +17,7 @@ syntaxes; pick whichever reads best.
 `@` is the current item. Inside method args, prefix paths with `@` to walk
 into it:
 
-```text
+```jetro
 $.users.filter(@.age >= 18)
 $.users.map(@.name)
 $.xs{@.active}                  # inline filter must also use @
@@ -26,7 +26,7 @@ $.xs{@.active}                  # inline filter must also use @
 Leading-dot shorthand `.age` inside method args desugars to `@.age` — the
 two forms are equivalent and the planner sees identical opcodes.
 
-```text
+```jetro
 $.users.filter(.age >= 18)
 $.users.map(.name)
 $.xs{.active}                    # works inside inline filters too
@@ -34,7 +34,7 @@ $.xs{.active}                    # works inside inline filters too
 
 ## Arrow-form named lambda
 
-```text
+```jetro
 $.users.filter(u => u.age >= 18)
 $.users.map((u) => u.name)
 ```
@@ -43,13 +43,13 @@ The parens around the parameter are optional for one parameter.
 
 For multiple parameters:
 
-```text
+```jetro
 $.pairs.map(([k, v]) => k + ":" + v)
 ```
 
 ## Python-style `lambda` keyword
 
-```text
+```jetro
 $.users.filter(lambda u: u.age >= 18)
 $.users.map(lambda u: u.name)
 ```
@@ -65,7 +65,7 @@ to prefer `@`.
 
 ## Method call basics
 
-```text
+```jetro
 .method()                       # no args
 .method(arg)                    # one positional
 .method(arg1, arg2)             # multiple
@@ -75,7 +75,7 @@ to prefer `@`.
 
 Examples:
 
-```text
+```jetro
 $.xs.take(3)
 $.xs.replace("foo", "bar")
 $.xs.join(",")
@@ -86,7 +86,7 @@ $.xs.sort(@.year)                # sort by key projection
 
 Lambdas can chain methods just like top-level queries:
 
-```text
+```jetro
 $.posts.map(p => p.tags.unique().count())
 $.users.filter(u => u.email.starts_with("admin"))
 ```
@@ -95,7 +95,7 @@ $.users.filter(u => u.email.starts_with("admin"))
 
 Some barriers (e.g. `pairwise`) yield 2-tuples. Destructure them:
 
-```text
+```jetro
 $.xs.pairwise().map(([a, b]) => b - a)
 ```
 
@@ -104,7 +104,7 @@ $.xs.pairwise().map(([a, b]) => b - a)
 Inside a lambda, `$` still means "the document root" — it does not get
 shadowed by the lambda parameter:
 
-```text
+```jetro
 DOC:    {"realnames": {"abc": "Ada"}, "posts": [{"author": "abc"}]}
 QUERY:  $.posts.map(p => $.realnames[p.author])
 OUT:    ["Ada"]
@@ -114,7 +114,7 @@ OUT:    ["Ada"]
 
 Bind a lambda once, use it many times:
 
-```text
+```jetro
 let by_year = (b => b.year < 1970) in
   $.books.filter(by_year)
 ```

@@ -71,7 +71,7 @@ Every builtin declares one of these laws (in `defs.rs`):
 
 ### A. Early termination on `.first`
 
-```text
+```jetro
 $.items.map(name).first()
 ```
 
@@ -83,7 +83,7 @@ Without demand: read all items, decode all, take first.
 
 ### B. Bounded filter
 
-```text
+```jetro
 $.items.filter(active).take(3)
 ```
 
@@ -95,7 +95,7 @@ Without demand: filter the entire array, then slice.
 
 ### C. Field-level projection
 
-```text
+```jetro
 $.users.map(u => {id, name})
 ```
 
@@ -107,7 +107,7 @@ biggest win.
 
 ### D. Last-element scan
 
-```text
+```jetro
 $.logs.filter(severity >= 3).last()
 ```
 
@@ -119,7 +119,7 @@ Without demand: scan forward, materialise all matches, take last.
 
 ### E. Count without payloads
 
-```text
+```jetro
 $.items.filter(status == "done").count()
 ```
 
@@ -129,7 +129,7 @@ $.items.filter(status == "done").count()
 
 ### F. Reverse + take
 
-```text
+```jetro
 $.items.reverse().take(2)
 ```
 

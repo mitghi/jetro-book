@@ -4,7 +4,7 @@
 
 Examples below run against:
 
-```text
+```jetro
 DOC:    {"products": [{"id": 1, "price": 3.7}, {"id": 2, "price": 4.2}], "metric": {"pct": 0.5, "value": 7, "x": 10}, "deltas": [-1, 2, -3, 4], "xs": [1, 2, 3, 4, 5]}
 ```
 
@@ -15,7 +15,7 @@ Pure scalar transforms over numbers.
 - **Signature:** `Number -> Number`
 - **Behavior:** Smallest integer ≥ x.
 
-```text
+```jetro
 QUERY:  3.2.ceil()     OUT: 4
 QUERY:  (-3.2).ceil() OUT: -3
 ```
@@ -25,7 +25,7 @@ QUERY:  (-3.2).ceil() OUT: -3
 - **Signature:** `Number -> Number`
 - **Behavior:** Largest integer ≤ x.
 
-```text
+```jetro
 QUERY:  3.7.floor()     OUT: 3
 QUERY:  (-3.7).floor() OUT: -4
 ```
@@ -35,7 +35,7 @@ QUERY:  (-3.7).floor() OUT: -4
 - **Signature:** `Number -> Number`
 - **Behavior:** Round to nearest; ties round half-away-from-zero.
 
-```text
+```jetro
 QUERY:  3.5.round()     OUT: 4
 QUERY:  3.4.round()     OUT: 3
 QUERY:  (-3.5).round() OUT: -4
@@ -46,7 +46,7 @@ QUERY:  (-3.5).round() OUT: -4
 - **Signature:** `Number -> Number`
 - **Behavior:** Absolute value.
 
-```text
+```jetro
 QUERY:  (-7).abs()     OUT: 7
 QUERY:  3.5.abs()     OUT: 3.5
 ```
@@ -55,7 +55,7 @@ QUERY:  3.5.abs()     OUT: 3.5
 
 These are scalar; lift them with `.map`:
 
-```text
+```jetro
 DOC:    {"xs": [1.4, 2.6, -3.5]}
 
 QUERY:  $.xs.map(@.round())
@@ -73,7 +73,7 @@ Numeric reducers (`sum`, `avg`, `min`, `max`) live in
 
 ## Practical examples
 
-```text
+```jetro
 # Round every price up to the nearest dollar
 $.products.map(p => p.merge({price_ceil: p.price.ceil()}))
 

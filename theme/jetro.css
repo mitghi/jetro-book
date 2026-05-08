@@ -1,0 +1,121 @@
+/* jetro syntax highlighting palette
+ *
+ * Tokens emitted by `theme/jetro.hljs.js`:
+ *   .hljs-variable.constant_   $ and @ roots
+ *   .hljs-property             .field path step
+ *   .hljs-built_in             registered builtin method (.filter, .map, …)
+ *   .hljs-title.function_      generic method call
+ *   .hljs-params               lambda parameter, alias `key:` rename
+ *   .hljs-keyword              let / in / lambda / match / when / if / else / …
+ *   .hljs-string               quoted literals (incl. f-strings)
+ *   .hljs-number               numeric literals
+ *   .hljs-operator             ==, =>, |>, ??, etc.
+ *
+ * Light theme uses a muted palette aligned with the rust-book gray accents
+ * already present in `extra.css`; dark theme falls back to slightly brighter
+ * variants of the same hues.
+ */
+
+/* Light theme defaults */
+.content pre code.hljs.language-jetro .hljs-variable,
+.content pre code.hljs.language-jetro .hljs-variable.constant_ {
+    color: #b85c00;        /* `$` / `@` — burnt orange */
+    font-weight: 600;
+}
+
+.content pre code.hljs.language-jetro .hljs-property {
+    color: #1e6091;        /* `.field` — deep blue */
+}
+
+.content pre code.hljs.language-jetro .hljs-built_in {
+    color: #6f42c1;        /* registered builtins — purple */
+    font-weight: 600;
+}
+
+.content pre code.hljs.language-jetro .hljs-title,
+.content pre code.hljs.language-jetro .hljs-title.function_ {
+    color: #5a3e92;        /* user-defined method calls — slightly lighter purple */
+}
+
+.content pre code.hljs.language-jetro .hljs-params {
+    color: #157a4a;        /* lambda params and rename aliases — green */
+    font-style: italic;
+}
+
+.content pre code.hljs.language-jetro .hljs-keyword {
+    color: #a23b72;        /* let / in / lambda / match / … — magenta */
+    font-weight: 600;
+}
+
+.content pre code.hljs.language-jetro .hljs-string {
+    color: #2c6e49;        /* string literals — forest green */
+}
+
+.content pre code.hljs.language-jetro .hljs-number {
+    color: #b8860b;        /* numbers — dark goldenrod */
+}
+
+.content pre code.hljs.language-jetro .hljs-operator {
+    color: #555;           /* operators — neutral gray */
+}
+
+.content pre code.hljs.language-jetro .hljs-comment {
+    color: #999;
+    font-style: italic;
+}
+
+/* Navy / dark themes — brighter variants */
+.navy .content pre code.hljs.language-jetro .hljs-variable.constant_,
+.coal .content pre code.hljs.language-jetro .hljs-variable.constant_,
+.ayu  .content pre code.hljs.language-jetro .hljs-variable.constant_  {
+    color: #f5a35a;
+}
+
+.navy .content pre code.hljs.language-jetro .hljs-property,
+.coal .content pre code.hljs.language-jetro .hljs-property,
+.ayu  .content pre code.hljs.language-jetro .hljs-property  {
+    color: #6cb6ff;
+}
+
+.navy .content pre code.hljs.language-jetro .hljs-built_in,
+.coal .content pre code.hljs.language-jetro .hljs-built_in,
+.ayu  .content pre code.hljs.language-jetro .hljs-built_in  {
+    color: #c792ea;
+}
+
+.navy .content pre code.hljs.language-jetro .hljs-title.function_,
+.coal .content pre code.hljs.language-jetro .hljs-title.function_,
+.ayu  .content pre code.hljs.language-jetro .hljs-title.function_  {
+    color: #a07fdc;
+}
+
+.navy .content pre code.hljs.language-jetro .hljs-params,
+.coal .content pre code.hljs.language-jetro .hljs-params,
+.ayu  .content pre code.hljs.language-jetro .hljs-params  {
+    color: #7ed492;
+    font-style: italic;
+}
+
+.navy .content pre code.hljs.language-jetro .hljs-keyword,
+.coal .content pre code.hljs.language-jetro .hljs-keyword,
+.ayu  .content pre code.hljs.language-jetro .hljs-keyword  {
+    color: #ff7eb6;
+}
+
+.navy .content pre code.hljs.language-jetro .hljs-string,
+.coal .content pre code.hljs.language-jetro .hljs-string,
+.ayu  .content pre code.hljs.language-jetro .hljs-string  {
+    color: #88cf8f;
+}
+
+.navy .content pre code.hljs.language-jetro .hljs-number,
+.coal .content pre code.hljs.language-jetro .hljs-number,
+.ayu  .content pre code.hljs.language-jetro .hljs-number  {
+    color: #f8c976;
+}
+
+.navy .content pre code.hljs.language-jetro .hljs-operator,
+.coal .content pre code.hljs.language-jetro .hljs-operator,
+.ayu  .content pre code.hljs.language-jetro .hljs-operator  {
+    color: #c4c4c4;
+}

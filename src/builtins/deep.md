@@ -8,7 +8,7 @@ available as `..method(...)` syntax sugar in path position.
 - **Signature:** `Any -> Array<Any>`
 - **Behavior:** Every descendant satisfying `pred`. Order: DFS pre-order.
 
-```text
+```jetro
 DOC:    {"a": {"x": 1}, "b": [{"x": 2}, {"y": 3}]}
 QUERY:  $..find(@.x?)
 OUT:    [{"x":1},{"x":2}]
@@ -27,7 +27,7 @@ significantly faster for shallow predicates.
 - **Behavior:** Every object that has *all* listed keys (regardless of
   value).
 
-```text
+```jetro
 DOC:    [{"id":1,"name":"a"},{"id":2},{"name":"c","id":3}]
 QUERY:  $..shape({id, name})
 OUT:    [{"id":1,"name":"a"},{"id":3,"name":"c"}]
@@ -39,7 +39,7 @@ OUT:    [{"id":1,"name":"a"},{"id":3,"name":"c"}]
 - **Behavior:** Every object whose listed keys equal the listed literal
   values.
 
-```text
+```jetro
 DOC:    [{"author":"Asimov","year":1951},{"author":"Asimov","year":1942},{"author":"Herbert","year":1965}]
 QUERY:  $..like({author: "Asimov"})
 OUT:    [{"author":"Asimov","year":1951},{"author":"Asimov","year":1942}]
@@ -50,7 +50,7 @@ OUT:    [{"author":"Asimov","year":1951},{"author":"Asimov","year":1942}]
 - **Signature:** `Any, (Any -> Any) -> Any`
 - **Behavior:** Apply `fn` to every node bottom-up; rebuild the tree.
 
-```text
+```jetro
 QUERY:  $.walk(node => node.upper() if node is string else node)
 # Returns the document with every string node uppercased.
 ```
@@ -84,7 +84,7 @@ useful for AST rewrites and document migrations.
 - **Behavior:** For every node matching `pred`, return the path from root to
   the node as an array of steps.
 
-```text
+```jetro
 DOC:    {"a": {"x": 1}, "b": [{"x": 2}]}
 QUERY:  $.trace_path(@.x?)
 OUT:    [{"path":"$.a","value":{"x":1}},{"path":"$.b[0]","value":{"x":2}}]
@@ -117,7 +117,7 @@ evaluation entirely.
 
 ## Practical examples
 
-```text
+```jetro
 # Find every node with an "id" key (anywhere in the tree)
 $..find(@.id?)
 

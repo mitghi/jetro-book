@@ -4,7 +4,7 @@
 
 Examples below run against:
 
-```text
+```jetro
 DOC:    {"users": [{"id": 1, "name": "Ada", "email": "ada@x.com", "active": true, "age": 30, "role": "admin", "secret": "a", "is_admin": true, "profile": {"name": "Ada", "email": "ada@x.com"}, "score": 85, "first_name": "Ada", "last_name": "Lovelace", "tags": ["math", "code"]}, {"id": 2, "name": "Bob", "email": "bob@y.org", "active": false, "age": 24, "role": "user", "secret": "b", "is_admin": false, "profile": {"name": "Bob", "email": "bob@y.org"}, "score": 40, "first_name": "Bob", "last_name": "Smith"}, {"id": 3, "name": "Cy", "email": "cy@x.com", "active": true, "age": 42, "role": "user", "secret": "c", "is_admin": false, "score": 90, "first_name": "Cy", "last_name": "Young"}]}
 ```
 
@@ -28,7 +28,7 @@ philosophy in places — call this out where it matters.
 
 ### Identity / projection
 
-```text
+```jetro
 jq:     .
 jetro:  $
 
@@ -41,7 +41,7 @@ jetro:  $.x.y[0]
 
 ### Iteration
 
-```text
+```jetro
 jq:     .users[]
 jetro:  $.users[*]                  # explicit; or just .users for chained methods
 
@@ -51,7 +51,7 @@ jetro:  $.users.map(@.name)
 
 ### Field selection / projection
 
-```text
+```jetro
 jq:     {id, name}
 jetro:  .pick(id, name)            # method form, maps over arrays
 
@@ -66,7 +66,7 @@ jetro:  $.omit(password)            # or $.password.delete()
 
 ### Filter
 
-```text
+```jetro
 jq:     .users | map(select(.active))
 jetro:  $.users.filter(@.active)
 
@@ -76,7 +76,7 @@ jetro:  $.users.filter(@.age > 18)
 
 ### Aggregates
 
-```text
+```jetro
 jq:     length
 jetro:  .len()                      # for arrays, objects, strings
         .count()                    # explicit array-count reducer
@@ -92,7 +92,7 @@ jetro:  $.map(@.age).min()
 
 ### Sort / unique / group
 
-```text
+```jetro
 jq:     sort
 jetro:  .sort()
 
@@ -112,7 +112,7 @@ jetro:  .count_by(@.k).entries().map(([k,n]) => {k, n})
 
 ### Slice and take
 
-```text
+```jetro
 jq:     .[0:3]
 jetro:  $[0:3]
 
@@ -129,7 +129,7 @@ jetro:  $[-1]
 
 ### Has / index / membership
 
-```text
+```jetro
 jq:     has("foo")
 jetro:  .has("foo")
 
@@ -142,7 +142,7 @@ jetro:  $.tags.includes("admin")
 
 ### Strings
 
-```text
+```jetro
 jq:     ascii_upcase
 jetro:  .upper()
 
@@ -163,7 +163,7 @@ jetro:  .captures("(\d+)")
 
 ### Recursive descent
 
-```text
+```jetro
 jq:     ..
 jetro:  ..                           # same notation
 
@@ -178,14 +178,14 @@ jetro:  $..find(@.id?)
 
 ### String formatting
 
-```text
+```jetro
 jq:     "Hello, \(.name)!"
 jetro:  f"Hello, {$.name}!"
 ```
 
 ### Conditional
 
-```text
+```jetro
 jq:     if .x > 5 then "big" else "small" end
 jetro:  "big" if $.x > 5 else "small"
 
@@ -195,14 +195,14 @@ jetro:  $.x ?? "default"
 
 ### Variables
 
-```text
+```jetro
 jq:     . as $doc | $doc.x + $doc.y
 jetro:  let doc = $ in doc.x + doc.y
 ```
 
 ### Reduce / fold
 
-```text
+```jetro
 jq:     reduce .[] as $x (0; . + $x)
 jetro:  $.sum()                      # for sum specifically
         # or general fold:
@@ -211,14 +211,14 @@ jetro:  $.sum()                      # for sum specifically
 
 ### Object construction
 
-```text
+```jetro
 jq:     {users: [.[] | {id, name}]}
 jetro:  {users: $.map(u => u.pick(id, name))}
 ```
 
 ### Modification
 
-```text
+```jetro
 jq:     .x = 1
 jetro:  $.x.set(1)
         # or
@@ -238,7 +238,7 @@ jetro:  $.users[*].active.set(true)
 
 ### Multiple writes
 
-```text
+```jetro
 jq:     .x = 1 | .y = 2 | del(.z)
 jetro:  patch $ {x: 1, y: 2, z: DELETE}
 ```
@@ -267,7 +267,7 @@ jq uses its alternative-destructuring operator `?//` to try both shapes:
 
 jetro has no `?//`. Use kind-test + `flat_map` to normalise:
 
-```text
+```jetro
 $.resources.flat_map(r =>
   let evts = (r.events if r.events is array else [r.events]) in
     evts.map(e => {
@@ -281,7 +281,7 @@ $.resources.flat_map(r =>
 
 …or with a `match` to make the two shapes explicit:
 
-```text
+```jetro
 $.resources.flat_map(r =>
   match r.events with {
     arr: array -> arr.map(e => {user_id: e.user_id, kind: r.kind, id: r.id, ts: e.ts}),
@@ -312,7 +312,7 @@ projection accumulates by reassignment.
 
 jetro collapses it to one chain:
 
-```text
+```jetro
 $.map(t => {
   id:       t.id,
   hashtags: t.entities.hashtags.map(@.text).join(";")
@@ -322,7 +322,7 @@ $.map(t => {
 `to_csv` already emits the row, headers and all. To match jq's headerless
 output:
 
-```text
+```jetro
 $.map(t => [t.id, t.entities.hashtags.map(@.text).join(";")])
  .map(row => row.map(@.to_string()).join(","))
  .join("\n")
@@ -347,7 +347,7 @@ jq's group_by returns an array-of-arrays, so the trailing `.[]` and
 
 jetro uses `count_by`, which already produces a `{tag: count}` map:
 
-```text
+```jetro
 $.flat_map(t => t.entities.hashtags.map(@.text))
  .count_by(@)
  .entries()

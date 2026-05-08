@@ -4,7 +4,7 @@
 
 Examples below run against:
 
-```text
+```jetro
 DOC:    {"users": [{"id": 1, "name": "Ada", "email": "ada@x.com", "active": true, "age": 30, "role": "admin", "secret": "a", "is_admin": true, "profile": {"name": "Ada", "email": "ada@x.com"}, "score": 85, "first_name": "Ada", "last_name": "Lovelace", "tags": ["math", "code"]}, {"id": 2, "name": "Bob", "email": "bob@y.org", "active": false, "age": 24, "role": "user", "secret": "b", "is_admin": false, "profile": {"name": "Bob", "email": "bob@y.org"}, "score": 40, "first_name": "Bob", "last_name": "Smith"}, {"id": 3, "name": "Cy", "email": "cy@x.com", "active": true, "age": 42, "role": "user", "secret": "c", "is_admin": false, "score": 90, "first_name": "Cy", "last_name": "Young"}], "user": {"id": 42, "name": "Ada", "email": "ada@x.com", "tags": ["math", "code"], "profile": {"name": "Ada", "email": "ada@x.com"}, "active": true, "verified": true}}
 ```
 
@@ -15,7 +15,7 @@ single pass over the document. This is the patch-fusion optimizer.
 
 Any sequence of chain-write terminals on the same document:
 
-```text
+```jetro
 $.user.name.set("Ada")
    .user.email.set("ada@x.com")
    .user.tags.append("admin")
@@ -23,7 +23,7 @@ $.user.name.set("Ada")
 
 Or the equivalent block form (preferred for many writes):
 
-```text
+```jetro
 patch $ {
   user.name: "Ada",
   user.email: "ada@x.com",
@@ -70,7 +70,7 @@ the user-visible properties are:
 
 ## Worked example
 
-```text
+```jetro
 DOC:
 {
   "users": [

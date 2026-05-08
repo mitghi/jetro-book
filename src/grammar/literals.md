@@ -2,7 +2,7 @@
 
 ## Scalars
 
-```text
+```jetro
 null
 true     false
 42       3.14     -7    1.5e3
@@ -15,7 +15,7 @@ Strings allow standard escapes (`\n`, `\t`, `\\`, `\"`, `\uXXXX`).
 
 `f"…"` interpolates `{expression}`:
 
-```text
+```jetro
 DOC:    {"name": "Ada", "age": 36}
 QUERY:  f"hi {$.name}, you are {$.age + 1} next year"
 OUT:    "hi Ada, you are 37 next year"
@@ -23,19 +23,19 @@ OUT:    "hi Ada, you are 37 next year"
 
 Inside a lambda:
 
-```text
+```jetro
 $.users.map(u => f"{u.name} <{u.email}>")
 ```
 
 Escape literal braces with `{{` and `}}`:
 
-```text
+```jetro
 f"{{not interpolated}}"      # "{not interpolated}"
 ```
 
 ## Arrays
 
-```text
+```jetro
 [1, 2, 3]
 ["a", "b"]
 [$.x, $.y, 99]              # values can be expressions
@@ -48,7 +48,7 @@ Heterogeneous arrays are fine: `[1, "a", null, [2,3]]`.
 
 ## Objects
 
-```text
+```jetro
 {name: "Ada", age: 36}            # bare-key (identifier-like)
 {"name": "Ada"}                   # quoted-key (any string)
 
@@ -66,7 +66,7 @@ Heterogeneous arrays are fine: `[1, "a", null, [2,3]]`.
 
 Regex appear as the right operand of `~=` or as arguments to regex builtins:
 
-```text
+```jetro
 $.s ~= "^[A-Z]+$"
 $.text.scan("\d+")
 ```

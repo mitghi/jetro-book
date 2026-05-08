@@ -20,7 +20,7 @@ and an output. Run them in your shell with `jetrocli`, in Rust with
 
 ## 1. Path navigation
 
-```text
+```jetro
 QUERY:  $.books[0].title
 OUT:    "Dune"
 ```
@@ -30,7 +30,7 @@ work: `[-1]` is "Snow Crash".
 
 ## 2. The whole array
 
-```text
+```jetro
 QUERY:  $.books[*].title
 OUT:    ["Dune","Foundation","Hyperion","Snow Crash"]
 ```
@@ -39,7 +39,7 @@ OUT:    ["Dune","Foundation","Hyperion","Snow Crash"]
 
 ## 3. Filter
 
-```text
+```jetro
 QUERY:  $.books.filter(@.year > 1980).map(@.title)
 OUT:    ["Hyperion","Snow Crash"]
 ```
@@ -52,7 +52,7 @@ accepted and desugars to `@.field`.
 
 These are all equivalent:
 
-```text
+```jetro
 $.books.filter(@.year > 1980)
 $.books.filter(.year > 1980)
 $.books.filter(b => b.year > 1980)
@@ -64,7 +64,7 @@ identical bytecode; benchmarks confirm them perf-equal.
 
 ## 5. Reducers
 
-```text
+```jetro
 QUERY:  $.books.count()
 OUT:    4
 
@@ -79,7 +79,7 @@ Reducers terminate the streaming pipeline.
 
 ## 6. Group / count / sort
 
-```text
+```jetro
 QUERY:  $.books.count_by(@.author)
 OUT:    {"Herbert":1,"Asimov":1,"Simmons":1,"Stephenson":1}
 
@@ -89,7 +89,7 @@ OUT:    ["Foundation","Dune","Hyperion","Snow Crash"]
 
 ## 7. Object projection
 
-```text
+```jetro
 QUERY:  $.books[0].pick(title, author)
 OUT:    {"title":"Dune","author":"Herbert"}
 
@@ -101,7 +101,7 @@ OUT:    [{"title":"Dune","year":1965}, ...]
 
 ## 8. Deep search
 
-```text
+```jetro
 QUERY:  $..find(@.year < 1960)
 OUT:    [{"title":"Foundation","year":1951,...}]
 
@@ -114,7 +114,7 @@ Equivalent named forms: `.deep_find`, `.deep_shape`, `.deep_like`.
 
 ## 9. Pipe and ternary
 
-```text
+```jetro
 QUERY:  $.books.count() | "found " + (@ as string) + " books"
 OUT:    "found 4 books"
 
@@ -126,14 +126,14 @@ OUT:    "old"
 
 ## 10. F-strings
 
-```text
+```jetro
 QUERY:  $.books.map(b => f"{b.title} ({b.year})")
 OUT:    ["Dune (1965)","Foundation (1951)","Hyperion (1989)","Snow Crash (1992)"]
 ```
 
 ## 11. Pattern match
 
-```text
+```jetro
 QUERY:
   match $.books[0] with {
     {year: y} when y < 1970 -> f"classic {y}",
@@ -148,7 +148,7 @@ shape, array shape, and rest captures.
 
 ## 12. Writes
 
-```text
+```jetro
 QUERY:  $.books[0].year.set(1900)
 OUT:    full document with books[0].year now 1900
 

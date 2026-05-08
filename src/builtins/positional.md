@@ -4,7 +4,7 @@
 
 Examples below run against:
 
-```text
+```jetro
 DOC:    {"users": [{"id": 1, "name": "Ada", "email": "ada@x.com", "active": true, "age": 30, "role": "admin", "secret": "a", "is_admin": true, "profile": {"name": "Ada", "email": "ada@x.com"}, "score": 85, "first_name": "Ada", "last_name": "Lovelace", "tags": ["math", "code"]}, {"id": 2, "name": "Bob", "email": "bob@y.org", "active": false, "age": 24, "role": "user", "secret": "b", "is_admin": false, "profile": {"name": "Bob", "email": "bob@y.org"}, "score": 40, "first_name": "Bob", "last_name": "Smith"}, {"id": 3, "name": "Cy", "email": "cy@x.com", "active": true, "age": 42, "role": "user", "secret": "c", "is_admin": false, "score": 90, "first_name": "Cy", "last_name": "Young"}], "orders": [{"id": 1, "customer": 1, "customer_id": 1, "cid": 1, "amount": 100, "status": "paid", "total": 100, "date": "2024-01-01"}, {"id": 2, "customer": 1, "customer_id": 1, "cid": 1, "amount": 50, "status": "open", "total": 50, "date": "2024-02-01"}, {"id": 3, "customer": 2, "customer_id": 2, "cid": 2, "amount": 75, "status": "paid", "total": 75, "date": "2024-03-01"}], "logs": [{"ts": "10:00", "sev": 1, "msg": "start"}, {"ts": "10:05", "sev": 3, "msg": "fail"}, {"ts": "10:10", "sev": 2, "msg": "warn"}], "transactions": [{"ts": "01"}, {"ts": "02"}, {"ts": "03"}]}
 ```
 
@@ -15,7 +15,7 @@ Bounded extraction by position.
 - **Signature:** `Array<A> -> A | null`
 - **Demand law:** `First` — always `FirstInput(1)`.
 
-```text
+```jetro
 QUERY:  [10,20,30].first()     OUT: 10
 QUERY:  [].first()              OUT: null
 
@@ -31,7 +31,7 @@ sink.
 - **Signature:** `Array<A> -> A | null`
 - **Demand law:** `Last` — always `LastInput(1)`.
 
-```text
+```jetro
 QUERY:  [10,20,30].last()     OUT: 30
 ```
 
@@ -44,7 +44,7 @@ length), `last` *seeks to the end*; for streams it must drain.
 - **Demand law:** `NthInput(i)` if `i` is non-negative; `LastInput(-i)`
   otherwise.
 
-```text
+```jetro
 QUERY:  [10,20,30,40].nth(2)     OUT: 30
 QUERY:  [10,20,30,40].nth(-1)     OUT: 40
 ```
@@ -61,7 +61,7 @@ QUERY:  [10,20,30,40].nth(-1)     OUT: 40
 - **Behavior:** Asserts at most one match; errors if more than one matches.
   Useful for "exactly one user with this id" shapes.
 
-```text
+```jetro
 QUERY:  $.users.find_one(@.id == 1)
 ```
 
@@ -71,7 +71,7 @@ QUERY:  $.users.find_one(@.id == 1)
 - **Behavior:** Coerce to array. Scalar → `[scalar]`; array → identity;
   null → `[]`.
 
-```text
+```jetro
 QUERY:  42.collect()     OUT: [42]
 QUERY:  [1,2].collect()     OUT: [1,2]
 QUERY:  null.collect()     OUT: []
@@ -88,7 +88,7 @@ your output type.
 
 ## Worked example
 
-```text
+```jetro
 DOC:    {"orders": [
   {"id": 1, "total": 100},
   {"id": 2, "total": 50},
@@ -107,7 +107,7 @@ The first query early-exits (one filter pass, one match). The second sorts
 
 ## Practical examples
 
-```text
+```jetro
 # First active user — early-exit, demand-aware
 $.users.find(@.active).name
 

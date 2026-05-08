@@ -4,7 +4,7 @@
 
 Examples below run against:
 
-```text
+```jetro
 DOC:    {"xs": [1, 2, 3, 4, 5], "row": {"k": "foo", "data": {"a": 1, "b": 2}}, "doc": {"a": 1, "b": 2, "type": "v1"}, "tree": {"x": 1, "children": [{"x": 2}]}, "value": 3.14}
 ```
 
@@ -14,7 +14,7 @@ domains (`Val`, borrowed `View`, tape).
 
 ## Anatomy
 
-```text
+```jetro
 match scrutinee with {
   pattern1 -> expr1,
   pattern2 when guard -> expr2,
@@ -49,7 +49,7 @@ match scrutinee with {
 
 ## 1. Discriminated union
 
-```text
+```jetro
 match $.event with {
   {kind: "click", x: cx, y: cy} -> f"click@{cx},{cy}",
   {kind: "key",   code: c}       -> f"key:{c}",
@@ -63,7 +63,7 @@ the bare `{kind: "click", x, y}` shorthand parses-error.
 
 ## 2. Numeric ranges
 
-```text
+```jetro
 match $.score with {
   s when s < 0 -> "invalid",
   0..50 -> "low",
@@ -75,7 +75,7 @@ match $.score with {
 
 ## 3. Or-patterns
 
-```text
+```jetro
 match $.day with {
   "sat" | "sun" -> "weekend",
   _ -> "weekday"
@@ -88,7 +88,7 @@ match $.day with {
 > the keys you care about explicitly and compute `rest` outside the match
 > if needed:
 
-```text
+```jetro
 match $.config with {
   {host: h, port: p} -> {host: h, port: p, extras: $.config.omit("host", "port")},
   _ -> null
@@ -97,7 +97,7 @@ match $.config with {
 
 ## 5. Array shape
 
-```text
+```jetro
 match $.coords with {
   [x, y] -> {x, y},
   [x, y, z] -> {x, y, z},
@@ -107,7 +107,7 @@ match $.coords with {
 
 ## 6. Head + tail
 
-```text
+```jetro
 match $.xs with {
   [] -> "empty",
   [first, ...rest] -> f"head={first}, count={rest.count()}",
@@ -116,7 +116,7 @@ match $.xs with {
 
 ## 7. Kind-bound + guard
 
-```text
+```jetro
 match $.value with {
   s: string when s.len() > 100 -> "long string",
   s: string -> "short string",
@@ -131,7 +131,7 @@ match $.value with {
 
 Walk every descendant; collect results.
 
-```text
+```jetro
 $.tree..match {
   {kind: "leaf", value} -> value,
   _ -> null
@@ -145,7 +145,7 @@ The trailing `.compact()` drops the `null`s from non-leaf descendants.
 Stops at the first match — the bang variant uses early termination via the
 structural index where possible.
 
-```text
+```jetro
 $.tree..match! {
   {role: "admin", id} -> id,
   _ -> null
@@ -154,7 +154,7 @@ $.tree..match! {
 
 ## 10. Migration / rewrite (`rec`)
 
-```text
+```jetro
 $.doc.rec({type: "v1"}, node => node.merge({type: "v2"}))
 ```
 
@@ -170,7 +170,7 @@ many narrow arms; they cost about as much as one big switch.
 
 ## 12. Guards over deep patterns
 
-```text
+```jetro
 match $.row with {
   {user: {age, role: "admin"}} when age >= 18 -> "adult admin",
   {user: {age}} when age < 18 -> "minor",

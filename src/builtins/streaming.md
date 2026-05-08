@@ -20,7 +20,7 @@ Examples in this chapter run against:
 - **Signature:** `Array<A> -> Array<B>` (with `f: A -> B`)
 - **Demand law:** `MapLike` — preserves pull, forces `Whole`.
 
-```text
+```jetro
 QUERY:  $.users.map(u => u.name)
 OUT:    ["Ada","Bob"]
 
@@ -39,7 +39,7 @@ OUT:    ["ADA","BOB"]
 - **Behavior:** Pair each element with its zero-based index. Output is a
   record `{index, value}` per element.
 
-```text
+```jetro
 QUERY:  $.xs.enumerate()
 OUT:    [{"index":0,"value":1},{"index":1,"value":2},{"index":2,"value":3},{"index":3,"value":4},{"index":4,"value":5}]
 
@@ -52,7 +52,7 @@ OUT:    [{"index":0,"value":"Ada"},{"index":1,"value":"Bob"}]
 - **Signature:** `Array<A> -> Array<[A, A]>`
 - **Behavior:** Yield consecutive pairs `[xs[0], xs[1]]`, `[xs[1], xs[2]]`, …
 
-```text
+```jetro
 QUERY:  [1,2,3,4].pairwise()
 OUT:    [[1,2],[2,3],[3,4]]
 
@@ -67,7 +67,7 @@ OUT:    [1, 1, 1, 1]
 - **Numeric:** Output values are returned as floats regardless of input
   numeric type.
 
-```text
+```jetro
 QUERY:  $.xs.lag()
 OUT:    [null, 1.0, 2.0, 3.0, 4.0]
 
@@ -83,7 +83,7 @@ OUT:    [null, null, 1.0, 2.0, 3.0]
 - **Signature:** `Array<Number> -> Array<Number | null>`
 - **Behavior:** `xs[i] - xs[i - n]`, with `null` until lag is satisfied.
 
-```text
+```jetro
 QUERY:  $.prices.diff_window()
 OUT:    [null, 5.0, -3.0, 8.0, -2.0, 7.0]
 ```
@@ -93,7 +93,7 @@ OUT:    [null, 5.0, -3.0, 8.0, -2.0, 7.0]
 - **Signature:** `Array<Number> -> Array<Number | null>`
 - **Behavior:** `(xs[i] - xs[i-n]) / xs[i-n]` — relative change.
 
-```text
+```jetro
 QUERY:  [100.0, 110.0, 121.0].pct_change()
 OUT:    [null, 0.1, 0.09999999999999998]
 ```
@@ -103,7 +103,7 @@ OUT:    [null, 0.1, 0.09999999999999998]
 - **Signature:** `Array<Number> -> Array<Number>`
 - **Behavior:** Running max / min up to and including the current position.
 
-```text
+```jetro
 QUERY:  $.prices.cummax()
 OUT:    [100.0, 105.0, 105.0, 110.0, 110.0, 115.0]
 
@@ -118,7 +118,7 @@ OUT:    [100.0, 100.0, 100.0, 100.0, 100.0, 100.0]
   stats, one for transform); not strictly streaming, but presented as a
   one-to-one stage at the user surface.
 
-```text
+```jetro
 QUERY:  [1.0, 2.0, 3.0, 4.0, 5.0].zscore()
 OUT:    [-1.414213562373095, -0.7071067811865475, 0.0, 0.7071067811865475, 1.414213562373095]
 ```
@@ -130,7 +130,7 @@ a custom reducer over the full input.
 
 ## Practical examples
 
-```text
+```jetro
 DOC:    {"prices":[100, 105, 102, 110, 108, 115]}
 
 # Apply tax to every price

@@ -4,7 +4,7 @@
 
 Examples below run against:
 
-```text
+```jetro
 DOC:    {"user": {"id": 42, "name": "Ada", "email": "ada@x.com", "tags": ["math", "code"], "profile": {"name": "Ada", "email": "ada@x.com"}, "active": true, "verified": true}, "xs": [1, 2, 3, 4, 5]}
 ```
 
@@ -26,7 +26,7 @@ Add a write method at the end of a rooted path:
 | `.append(v)` | Push to the leaf array |
 | `.prepend(v)` | Unshift onto the leaf array |
 
-```text
+```jetro
 DOC:    {"user": {"name": "Ada", "tags": ["math"]}}
 
 QUERY:  $.user.name.set("Ada Lovelace")
@@ -50,7 +50,7 @@ when a sub-pipeline wants the old "return the new value" semantics.
 
 The same operation expressed as a block:
 
-```text
+```jetro
 patch $ {
   user.name: "Ada Lovelace",
   user.tags: DELETE
@@ -69,7 +69,7 @@ single fused pass (see [Write Fusion](../recipes/write-fusion.md)).
 
 ## Conditional writes
 
-```text
+```jetro
 patch $ {
   status: "active" when $.verified,
   retired_at: now() when $.retired
@@ -81,7 +81,7 @@ written nor zeroed.
 
 ## Broadcast over arrays
 
-```text
+```jetro
 DOC:    {"items": [{"x": 1}, {"x": 2}, {"x": 3}]}
 
 QUERY:  $.items[*].x.set(0)
@@ -93,7 +93,7 @@ OUT:    [0,0,0]
 Some users prefer the v1 behavior where a write inside a `.map` returned the
 written value, not the patched root:
 
-```text
+```jetro
 $.items.map(item => item | set(item.x + 1))
 ```
 
@@ -101,7 +101,7 @@ The pipe form `value | set(new)` keeps that meaning.
 
 ## Modify with pipe
 
-```text
+```jetro
 $.user.modify(u => u.merge({last_seen: now()}))
 ```
 
@@ -112,13 +112,13 @@ writes the result back at the same path.
 
 Either chain them:
 
-```text
+```jetro
 $.user.name.set("Ada").tags.append("admin")
 ```
 
 or use a block:
 
-```text
+```jetro
 patch $ {
   user.name: "Ada",
   user.tags[*]: "active"   # broadcast
@@ -133,7 +133,7 @@ single fused write pass.
 
 A third surface, written as a method call:
 
-```text
+```jetro
 DOC:    {"books": [
   {"title": "Dune", "year": 1965, "tags": ["sf"]},
   {"title": "Hyperion", "year": 1989, "tags": ["sf"]}
@@ -164,7 +164,7 @@ full argument matrix.
 A predicated wildcard inside a path. Available wherever `[*]` is, and
 particularly useful inside `.update` selectors and quoted path keys:
 
-```text
+```jetro
 DOC:    {"books": [
   {"title": "Dune", "year": 1965},
   {"title": "Hyperion", "year": 1989}
@@ -181,7 +181,7 @@ are skipped from the path traversal entirely.
 
 Wildcard chain-writes are now lowered to a fused patch:
 
-```text
+```jetro
 DOC:    {"books": [{"tags": ["sf"]}, {"tags": ["hugo"]}]}
 QUERY:  $.books[*].tags.modify(@.append("test"))
 OUT:    {"books":[{"tags":["sf","test"]},{"tags":["hugo","test"]}]}

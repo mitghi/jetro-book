@@ -4,7 +4,7 @@
 
 Examples below run against:
 
-```text
+```jetro
 DOC:    {"users": [{"id": 1, "name": "Ada", "email": "ada@x.com", "active": true, "age": 30, "role": "admin", "secret": "a", "is_admin": true, "profile": {"name": "Ada", "email": "ada@x.com"}, "score": 85, "first_name": "Ada", "last_name": "Lovelace", "tags": ["math", "code"]}, {"id": 2, "name": "Bob", "email": "bob@y.org", "active": false, "age": 24, "role": "user", "secret": "b", "is_admin": false, "profile": {"name": "Bob", "email": "bob@y.org"}, "score": 40, "first_name": "Bob", "last_name": "Smith"}, {"id": 3, "name": "Cy", "email": "cy@x.com", "active": true, "age": 42, "role": "user", "secret": "c", "is_admin": false, "score": 90, "first_name": "Cy", "last_name": "Young"}], "logs": [{"ts": "10:00", "sev": 1, "msg": "start"}, {"ts": "10:05", "sev": 3, "msg": "fail"}, {"ts": "10:10", "sev": 2, "msg": "warn"}], "tweets": [{"id": 1, "text": "#foo", "entities": {"hashtags": [{"text": "foo"}]}}, {"id": 2, "text": "#bar #foo", "entities": {"hashtags": [{"text": "bar"}, {"text": "foo"}]}}], "records": [{"id": 1, "name": "a", "email": "x@y.com"}, {"id": 2, "name": "b", "email": "u@v.com"}]}
 ```
 
@@ -16,7 +16,7 @@ Serialise sequences of objects to row-oriented text formats.
 - **Behavior:** RFC-4180-ish CSV. Without arguments, the union of object keys
   is the header set, sorted by first-appearance.
 
-```text
+```jetro
 DOC:    [{"name":"Ada","age":36},{"name":"Bob","age":42}]
 QUERY:  $.to_csv()
 OUT:
@@ -27,7 +27,7 @@ Bob,42"
 
 With explicit headers:
 
-```text
+```jetro
 QUERY:  $.to_csv(["age","name"])
 OUT:
 "age,name
@@ -44,7 +44,7 @@ RFC 4180.
 - **Behavior:** Same as `to_csv` but tab-separated. No quoting (tab-in-value
   is replaced with a space).
 
-```text
+```jetro
 QUERY:  $.users.to_tsv(["id","email"])
 ```
 
@@ -52,7 +52,7 @@ QUERY:  $.users.to_tsv(["id","email"])
 
 Build a report:
 
-```text
+```jetro
 $.users
   .filter(@.active)
   .map(u => u.pick(id, name, email))
@@ -79,7 +79,7 @@ jetrocli '$.users.filter(@.active).pick(id,name).to_csv()' < users.json > out.cs
 
 ## Practical examples
 
-```text
+```jetro
 # Active-user export
 $.users.filter(@.active).map(u => u.pick(id, name, email)).sort(u => u.id).to_csv()
 

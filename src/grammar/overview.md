@@ -34,7 +34,7 @@ A handy [precedence table](./precedence.md) sits at the end of this part.
 
 ## A worked sample
 
-```text
+```jetro
 $.users
   .filter(u => u.active and u.age >= 18)
   .map(u => { id: u.id, name: u.name, email: u.email })

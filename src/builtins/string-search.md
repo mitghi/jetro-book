@@ -11,7 +11,7 @@
 | `starts_with(prefix)` | Prefix check |
 | `ends_with(suffix)` | Suffix check |
 
-```text
+```jetro
 QUERY:  "  ".is_blank()     OUT: true
 QUERY:  "abc123".is_numeric()     OUT: false
 QUERY:  "hello".starts_with("he")     OUT: true
@@ -24,14 +24,14 @@ QUERY:  "hello".starts_with("he")     OUT: true
 | `index_of(needle)` | First index of `needle`, or `-1` |
 | `last_index_of(needle)` | Last index of `needle`, or `-1` |
 
-```text
+```jetro
 QUERY:  "hello world".index_of("o")     OUT: 4
 QUERY:  "hello world".last_index_of("o")     OUT: 7
 ```
 
 ## Substring search
 
-```text
+```jetro
 "foo bar foo".matches("foo")    # 2 (count of literal occurrences)
 "abc 12 cd 34".scan("\d+")     # ["12", "34"] (regex matches as strings)
 ```
@@ -46,7 +46,7 @@ QUERY:  "hello world".last_index_of("o")     OUT: 7
 | `captures(pattern)` | First match with groups: `[full, g1, g2, …]` |
 | `captures_all(pattern)` | Array of `captures` results |
 
-```text
+```jetro
 QUERY:  "a1b2".re_match("\d")     OUT: true
 QUERY:  "a1b2".match_first("\d+")     OUT: "1"
 QUERY:  "a1b2".match_all("\d+")     OUT: ["1","2"]
@@ -64,14 +64,14 @@ The `~=` operator is sugar for `re_match` and returns the same boolean.
 | `split(sep)` | Split on literal separator |
 | `split_re(pattern)` | Split on regex |
 
-```text
+```jetro
 QUERY:  "a,b,c".split(",")     OUT: ["a","b","c"]
 QUERY:  "a,,b".split_re(",+")     OUT: ["a","b"]
 ```
 
 ## Multi-needle membership
 
-```text
+```jetro
 "abc def".contains_any(["abc", "xyz"])    # true (matches first)
 "abc def".contains_all(["abc", "def"])    # true (all match)
 ```

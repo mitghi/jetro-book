@@ -4,7 +4,7 @@
 
 Examples below run against:
 
-```text
+```jetro
 DOC:    {"users": [{"id": 1, "name": "Ada", "email": "ada@x.com", "active": true, "age": 30, "role": "admin", "secret": "a", "is_admin": true, "profile": {"name": "Ada", "email": "ada@x.com"}, "score": 85, "first_name": "Ada", "last_name": "Lovelace", "tags": ["math", "code"]}, {"id": 2, "name": "Bob", "email": "bob@y.org", "active": false, "age": 24, "role": "user", "secret": "b", "is_admin": false, "profile": {"name": "Bob", "email": "bob@y.org"}, "score": 40, "first_name": "Bob", "last_name": "Smith"}, {"id": 3, "name": "Cy", "email": "cy@x.com", "active": true, "age": 42, "role": "user", "secret": "c", "is_admin": false, "score": 90, "first_name": "Cy", "last_name": "Young"}], "user": {"id": 42, "name": "Ada", "email": "ada@x.com", "tags": ["math", "code"], "profile": {"name": "Ada", "email": "ada@x.com"}, "active": true, "verified": true}}
 ```
 
@@ -19,7 +19,7 @@ Methods that read or rewrite objects.
 | `entries` | `Object -> Array<[String, Any]>` | Key-value pairs |
 | `to_pairs` | `Object -> Array<[String, Any]>` | Alias of `entries` |
 
-```text
+```jetro
 DOC:    {"a": 1, "b": 2}
 QUERY:  $.keys()     OUT: ["a","b"]
 QUERY:  $.values()     OUT: [1,2]
@@ -31,7 +31,7 @@ QUERY:  $.entries()     OUT: [["a",1],["b",2]]
 - **Signature:** `Array<[String, Any]> -> Object`
 - **Behavior:** Inverse of `to_pairs`.
 
-```text
+```jetro
 QUERY:  [["a",1],["b",2]].from_pairs()
 OUT:    {"a":1,"b":2}
 ```
@@ -42,7 +42,7 @@ OUT:    {"a":1,"b":2}
 - **Behavior:** Swap keys and values. Values must be coercible to keys
   (string-like).
 
-```text
+```jetro
 QUERY:  {"a":"x","b":"y"}.invert()
 OUT:    {"x":"a","y":"b"}
 ```
@@ -52,7 +52,7 @@ OUT:    {"x":"a","y":"b"}
 - **Signature:** `Object -> Object`
 - **Behavior:** Keep only the named keys. Supports `alias: src` rename.
 
-```text
+```jetro
 DOC:    {"id": 1, "name": "Ada", "secret": "!"}
 
 QUERY:  $.pick(id, name)
@@ -64,7 +64,7 @@ OUT:    {"name":"Ada","uid":1}
 
 Maps over arrays of objects:
 
-```text
+```jetro
 $.users.pick(id, email)
 ```
 
@@ -75,7 +75,7 @@ is equivalent to `$.users.map(u => u.pick(id, email))`.
 - **Signature:** `Object -> Object`
 - **Behavior:** Inverse of `pick`. Drop the named keys.
 
-```text
+```jetro
 QUERY:  $.user.omit(secret, password)
 ```
 
@@ -87,7 +87,7 @@ QUERY:  $.user.omit(secret, password)
 | `deep_merge(other)` | Recursive merge — sub-objects merged, arrays replaced |
 | `defaults(other)` | Reverse merge — keep self's keys, fill missing from `other` |
 
-```text
+```jetro
 QUERY:  {"a":1,"b":2}.merge({"b":99,"c":3})
 OUT:    {"a":1,"b":99,"c":3}
 
@@ -103,7 +103,7 @@ OUT:    {"a":1,"b":2}
 - **Signature:** `Object -> Object`
 - **Behavior:** Rename keys per a `{old: new, ...}` mapping.
 
-```text
+```jetro
 QUERY:  $.user.rename({user_id: id, full_name: name})
 ```
 
@@ -112,7 +112,7 @@ QUERY:  $.user.rename({user_id: id, full_name: name})
 - **Signature:** `Object -> Object`
 - **Behavior:** Apply `fn` to every key / value.
 
-```text
+```jetro
 QUERY:  {"foo": 1, "bar": 2}.transform_keys(@.upper())
 OUT:    [{"BAR":2,"FOO":1}]
 
@@ -125,7 +125,7 @@ OUT:    [{"a":10,"b":20}]
 - **Signature:** `Object -> Object`
 - **Behavior:** Keep entries whose key / value matches the predicate.
 
-```text
+```jetro
 QUERY:  $.config.filter_keys(k => k.starts_with("aws_"))
 QUERY:  $.scores.filter_values(@ >= 50)
 ```
@@ -136,7 +136,7 @@ QUERY:  $.scores.filter_values(@ >= 50)
 - **Behavior:** Pivot a table-shaped array into a nested object indexed by
   `rows` then `cols`, with `value` as the leaf.
 
-```text
+```jetro
 DOC:    [{"y":2024,"q":1,"v":10},{"y":2024,"q":2,"v":20},{"y":2025,"q":1,"v":15}]
 QUERY:  $.pivot("y", "q", "v")
 OUT:    {"2024":{"1":10,"2":20},"2025":{"1":15}}
@@ -147,7 +147,7 @@ OUT:    {"2024":{"1":10,"2":20},"2025":{"1":15}}
 - **Signature:** `Array<String> -> String`
 - **Behavior:** Like `join`, but works on object values too:
 
-```text
+```jetro
 QUERY:  {"a":"x","b":"y"}.values().implode("/")
 OUT:    ["x","y"]
 ```
@@ -163,7 +163,7 @@ single object is a scalar.
 
 ## Practical examples
 
-```text
+```jetro
 DOC:    {"users":[
   {"id":1,"name":"Ada","email":"ada@x.com","secret":"!"},
   {"id":2,"name":"Bob","email":"bob@y.org","secret":"?"}

@@ -33,7 +33,7 @@ Barriers cannot stream: `.sort` must see every element before it can emit
 *any*. The pipeline buffers up to the barrier, runs the barrier as a unit,
 then resumes streaming if more stages follow.
 
-```text
+```jetro
 $.xs.map(f).filter(p).sort(@.x).take(10).map(g)
         \________________/   \____________/
             streaming         streaming again

@@ -5,7 +5,7 @@ up in JSON work.
 
 ## Arithmetic
 
-```text
+```jetro
 1 + 2          # 3
 3 - 1          # 2
 2 * 3          # 6
@@ -20,7 +20,7 @@ up in JSON work.
 
 ## Comparison
 
-```text
+```jetro
 a == b         # equality
 a != b         # inequality
 a < b          # less than
@@ -34,7 +34,7 @@ Cross-type comparison returns `false` for `==` and `true` for `!=`.
 
 ## Logical
 
-```text
+```jetro
 a and b        # short-circuit AND
 a or b         # short-circuit OR
 not a          # negation
@@ -45,14 +45,14 @@ is truthy.
 
 ## Pipe
 
-```text
+```jetro
 value | expr
 ```
 
 Evaluates `expr` with `@` bound to `value`. It is **not** a method-call
 shorthand.
 
-```text
+```jetro
 DOC:    {"x": 10}
 QUERY:  $.x | @ * 2
 OUT:    20
@@ -65,13 +65,13 @@ To call a method, use dot syntax: `$.x.upper()`, not `$.x | upper`.
 
 ## Coalesce
 
-```text
+```jetro
 a ?? b
 ```
 
 Return `a` unless it is null, in which case `b`.
 
-```text
+```jetro
 DOC:    {"name": null}
 QUERY:  $.name ?? "anon"
 OUT:    "anon"
@@ -81,11 +81,11 @@ OUT:    "anon"
 
 Python-style — postfix condition:
 
-```text
+```jetro
 "hot" if temp > 30 else "cool"
 ```
 
-```text
+```jetro
 DOC:    {"temp": 35}
 QUERY:  "hot" if $.temp > 30 else "cool"
 OUT:    "hot"
@@ -93,7 +93,7 @@ OUT:    "hot"
 
 ## Kind tests
 
-```text
+```jetro
 v is number
 v is string
 v is array
@@ -104,13 +104,13 @@ v is bool
 
 Returns boolean.
 
-```text
+```jetro
 QUERY:  $.x is number
 ```
 
 ## Cast
 
-```text
+```jetro
 x as int
 x as float
 x as string
@@ -122,14 +122,14 @@ x as object
 Coerces the value (or returns null if the cast is impossible — depends on the
 specific cast).
 
-```text
+```jetro
 "42" as int        # 42
 42 as string       # "42"
 ```
 
 ## Membership
 
-```text
+```jetro
 xs has v           # array membership: true if v is in xs
 o  has "k"         # object membership: true if key "k" exists
 ```
@@ -138,14 +138,14 @@ There is **no `v in xs` operator** — that form is a parse error. Use the
 postfix `has` operator above, or call `.includes(v)` (arrays/strings)
 explicitly:
 
-```text
+```jetro
 $.tags.includes("hugo")    # ✓
 "hugo" in $.tags           # ✗ parse error
 ```
 
 ## Regex match
 
-```text
+```jetro
 s ~= "pattern"
 ```
 
@@ -159,7 +159,7 @@ when `condition` is falsy. See [Patch](./patch.md).
 
 ## Examples
 
-```text
+```jetro
 DOC:    {"books": [{"year": 1965, "tags": ["sf"]}, {"year": 1989, "tags": ["sf","hugo"]}], "year_floor": 2000}
 
 QUERY:  $.books.filter((@.year > 1970 and @.tags.includes("hugo")) or @.year >= $.year_floor)

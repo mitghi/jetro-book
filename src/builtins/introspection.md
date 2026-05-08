@@ -8,7 +8,7 @@ Methods that report on the *kind* and *shape* of a value, plus JSON round-trip.
 - **Behavior:** Returns the kind of value as a string: `"null"`, `"bool"`,
   `"number"`, `"string"`, `"array"`, `"object"`.
 
-```text
+```jetro
 QUERY:  $.x.type()
 DOC:    {"x": [1,2,3]}
 OUT:    "array"
@@ -20,7 +20,7 @@ OUT:    "array"
 - **Behavior:** Length: chars for strings, elements for arrays, key count for
   objects. Errors on `null`/`bool`/`number`.
 
-```text
+```jetro
 DOC:    {"s": "hello", "xs": [1,2,3], "o": {"a":1,"b":2}}
 
 QUERY:  $.s.len()     OUT: 1
@@ -34,7 +34,7 @@ QUERY:  $.o.len()     OUT: 1
 - **Behavior:** Stringifies a scalar (`42` → `"42"`, `true` → `"true"`,
   `null` → `"null"`). For arrays/objects, returns the JSON serialisation.
 
-```text
+```jetro
 QUERY:  42.to_string()     OUT: "42"
 QUERY:  ([1, 2]).to_string()     OUT: "[1,2]"
 ```
@@ -44,7 +44,7 @@ QUERY:  ([1, 2]).to_string()     OUT: "[1,2]"
 - **Signature:** `Any -> String`
 - **Behavior:** Compact JSON serialisation of any value.
 
-```text
+```jetro
 QUERY:  $.user.to_json()
 ```
 
@@ -57,7 +57,7 @@ for scalars, `to_json` always quotes strings (`"foo"` → `"\"foo\""`),
 - **Signature:** `String -> Any`
 - **Behavior:** Parse a JSON string into a value.
 
-```text
+```jetro
 QUERY:  '{"x":1}'.from_json()
 OUT:    {"x":1}
 
@@ -66,7 +66,7 @@ QUERY:  $.encoded.from_json().x
 
 Errors on malformed input. Wrap in `try` if the source is untrusted:
 
-```text
+```jetro
 try $.s.from_json() else null
 ```
 
@@ -76,7 +76,7 @@ try $.s.from_json() else null
 - **Behavior:** Infers a schema sketch — keys, kinds, nullable flags. Useful
   for "what does this document look like?" probes.
 
-```text
+```jetro
 DOC:    [{"id": 1, "name": "a"}, {"id": 2, "name": null}]
 QUERY:  $.schema()
 OUT:    {"items":{"fields":{"id":{"type":"Int"},"name":{"nullable":true,"type":"String"}},"required":["id"],"type":"Object"},"len":2,"type":"Array"}
@@ -94,7 +94,7 @@ treat it as advisory rather than a stable contract.
 
 ## Practical examples
 
-```text
+```jetro
 # Quick shape check
 $.payload.type()                        # → "object"
 $.payload.len()                         # for object: number of keys

@@ -81,7 +81,7 @@ the worst case; document the cap and surface it loudly.
 `in` would be ambiguous with `let X = Y in Z` and `for x in xs`. Use the
 postfix `has` operator or `.includes(v)` method:
 
-```text
+```jetro
 xs has "x"             # ✓ operator
 xs.includes("x")       # ✓ method
 "x" in xs              # ✗ parse error (intentional)
@@ -92,7 +92,7 @@ xs.includes("x")       # ✓ method
 `.replace(needle, with)` replaces only the first match — JavaScript-style.
 Use `.replace_all` for substitute-every behaviour:
 
-```text
+```jetro
 "hello hello".replace("hello", "hi")          # → "hi hello"
 "hello hello".replace_all("hello", "hi")      # → "hi hi"
 ```
@@ -105,7 +105,7 @@ There are no comments inside a query. Strip client-side.
 
 Inline filter is `{predicate}`. `[expr]` is index/slice.
 
-```text
+```jetro
 $.xs{@.active}        # ✓ inline filter
 $.xs[@.active]        # ✗ index expression
 ```
@@ -122,7 +122,7 @@ $.xs[@.active]        # ✗ index expression
 | `map`, `flat_map`, `transform_keys`, `transform_values`, `filter_keys`, `filter_values` | Same |
 | `sort`, `unique_by`, `group_by`, `count_by`, `index_by`, `max_by`, `min_by` | Same; `(b => b.x)` named lambda preferred for readability |
 
-```text
+```jetro
 $.books.sort(b => b.year)             # named lambda
 $.books.sort(@.year)                  # @-form
 $.books.sort(.year)                   # bare-path sugar (≡ @-form)
@@ -137,7 +137,7 @@ $.books.sort(.year)                   # bare-path sugar (≡ @-form)
 | `rename({old: new, ...})` | Object map |
 | `missing("k1", "k2", ...)` | String literals |
 
-```text
+```jetro
 $.user.pick(id, name)                 # ✓
 $.user.pick(@.id, @.name)             # ✗ parse error
 $.user.pick(uid: id)                  # ✓ alias
@@ -147,14 +147,14 @@ $.user.pick(uid: id)                  # ✓ alias
 
 Two-arg lambdas use parens:
 
-```text
+```jetro
 $.orders.equi_join($.customers, "cid", "id", (o, c) => {buyer: c.name})
 $.xs.accumulate(0, (a, b) => a + b)
 ```
 
 Single-arg array destructure (with optional rest) is supported:
 
-```text
+```jetro
 $.entries.map(([k, v]) => {k, v})         # ✓
 $.rows.map(([h, ...tail]) => tail)        # ✓ rest binding
 ```

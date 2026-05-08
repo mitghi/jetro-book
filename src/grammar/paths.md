@@ -4,7 +4,7 @@
 
 Examples below run against:
 
-```text
+```jetro
 DOC:    {"users": [{"id": 1, "name": "Ada", "email": "ada@x.com", "active": true, "age": 30, "role": "admin", "secret": "a", "is_admin": true, "profile": {"name": "Ada", "email": "ada@x.com"}, "score": 85, "first_name": "Ada", "last_name": "Lovelace", "tags": ["math", "code"]}, {"id": 2, "name": "Bob", "email": "bob@y.org", "active": false, "age": 24, "role": "user", "secret": "b", "is_admin": false, "profile": {"name": "Bob", "email": "bob@y.org"}, "score": 40, "first_name": "Bob", "last_name": "Smith"}, {"id": 3, "name": "Cy", "email": "cy@x.com", "active": true, "age": 42, "role": "user", "secret": "c", "is_admin": false, "score": 90, "first_name": "Cy", "last_name": "Young"}], "user": {"id": 42, "name": "Ada", "email": "ada@x.com", "tags": ["math", "code"], "profile": {"name": "Ada", "email": "ada@x.com"}, "active": true, "verified": true}, "books": [{"title": "Dune", "year": 1965, "author": "Herbert", "tags": ["sf"], "price": 15, "genre": "sci-fi"}, {"title": "Foundation", "year": 1951, "author": "Asimov", "tags": ["sf", "hugo"], "price": 10, "genre": "sci-fi"}, {"title": "Hyperion", "year": 1989, "author": "Simmons", "tags": ["sf", "hugo"], "price": 18, "genre": "cyberpunk"}, {"title": "Snow Crash", "year": 1992, "author": "Stephenson", "tags": ["sf", "cyberpunk"], "price": 12, "genre": "cyberpunk"}], "xs": [1, 2, 3, 4, 5]}
 ```
 
@@ -20,7 +20,7 @@ left-to-right.
 | `@` | The current value (set by `.filter`, `.map`, `\|`, etc.) |
 | `name` | A let-bound name or lambda parameter |
 
-```text
+```jetro
 DOC:    {"x": 10}
 QUERY:  $
 OUT:    {"x":10}
@@ -31,7 +31,7 @@ OUT:    11
 
 ## Field access
 
-```text
+```jetro
 DOC:    {"user": {"name": "Ada"}}
 QUERY:  $.user.name
 OUT:    ["Ada"]
@@ -39,7 +39,7 @@ OUT:    ["Ada"]
 
 Field names may also use string keys via `["name"]`:
 
-```text
+```jetro
 QUERY:  $["user"]["name"]
 ```
 
@@ -48,7 +48,7 @@ Use the bracket form when the key contains characters disallowed in identifiers
 
 ## Indexing arrays
 
-```text
+```jetro
 DOC:    {"xs": [10, 20, 30, 40]}
 QUERY:  $.xs[0]
 OUT:    10
@@ -61,7 +61,7 @@ Negative indices count from the end.
 
 ## Slicing
 
-```text
+```jetro
 QUERY:  $.xs[1:3]
 OUT:    [20,30]
 
@@ -77,7 +77,7 @@ OUT:    [10,30]
 
 ## Wildcards
 
-```text
+```jetro
 QUERY:  $.xs[*]
 OUT:    [10,20,30,40]
 ```
@@ -90,7 +90,7 @@ OUT:    [10,20,30,40]
 A predicated wildcard — keeps only elements satisfying `pred` (with `@`
 bound to the candidate).
 
-```text
+```jetro
 DOC:    {"books": [{"title": "Dune", "year": 1965}, {"title": "Hyperion", "year": 1989}]}
 QUERY:  $.books[* if year > 1980]
 OUT:    [{"title":"Hyperion","year":1989}]
@@ -104,7 +104,7 @@ but stays on the path side of parsing. Particularly useful inside
 Chaining a bare field step after a filtered wildcard collapses to
 `null` — chain a method instead:
 
-```text
+```jetro
 QUERY:  $.books[* if year > 1980].map(@.title)
 OUT:    ["Hyperion"]
 ```
@@ -113,7 +113,7 @@ OUT:    ["Hyperion"]
 
 `{predicate}` after a path step keeps only matching elements:
 
-```text
+```jetro
 DOC:    {"books": [{"year": 1965}, {"year": 1989}]}
 QUERY:  $.books{@.year > 1970}
 OUT:    [{"year":1989}]
@@ -126,7 +126,7 @@ named-lambda forms.
 
 `..` walks every descendant value in DFS pre-order:
 
-```text
+```jetro
 DOC:    {"a": {"b": {"x": 1}}, "c": [{"x": 2}, {"x": 3}]}
 QUERY:  $..x
 OUT:    [1,2,3]
@@ -134,7 +134,7 @@ OUT:    [1,2,3]
 
 Combine with method calls (no space):
 
-```text
+```jetro
 QUERY:  $..find(@.year < 1960)
 QUERY:  $..shape({year, title})
 QUERY:  $..like({author: "Asimov"})
@@ -146,7 +146,7 @@ The deep variants are bitmap-accelerated when a structural index is available.
 
 Compute a key at runtime:
 
-```text
+```jetro
 DOC:    {"realnames": {"abc": "Ada"}, "post": {"author": "abc"}}
 QUERY:  $.realnames[$.post.author]
 OUT:    "Ada"
@@ -154,7 +154,7 @@ OUT:    "Ada"
 
 Inside a lambda:
 
-```text
+```jetro
 DOC:    {"realnames": {"abc": "Ada"}, "posts": [{"author": "abc"}]}
 QUERY:  $.posts.map(p => $.realnames[p.author])
 OUT:    ["Ada"]
@@ -167,7 +167,7 @@ OUT:    ["Ada"]
 | `step?` | Optional — return null instead of error if missing |
 | `step!` | Exactly-one — error if zero or many |
 
-```text
+```jetro
 DOC:    {"xs": [42]}
 QUERY:  $.xs!
 OUT:    [42]
@@ -180,7 +180,7 @@ OUT:    null      # absent, no error
 
 Paths and methods are interchangeable steps:
 
-```text
+```jetro
 $.users.filter(@.active).pick(name, email)[0]
 ```
 
@@ -192,7 +192,7 @@ Inside method-call arguments, paths must start with `@` (current item),
 `$` (document root), or a bound name. Bare-path forms like `.field` do **not**
 parse:
 
-```text
+```jetro
 $.users.filter(@.age > 18)        # ✓ @-form
 $.users.filter(u => u.age > 18)   # ✓ named lambda
 $.users.filter(.age > 18)         # ✗ parse error

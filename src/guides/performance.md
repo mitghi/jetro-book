@@ -4,7 +4,7 @@
 
 Examples below run against:
 
-```text
+```jetro
 DOC:    {"users": [{"id": 1, "name": "Ada", "email": "ada@x.com", "active": true, "age": 30, "role": "admin", "secret": "a", "is_admin": true, "profile": {"name": "Ada", "email": "ada@x.com"}, "score": 85, "first_name": "Ada", "last_name": "Lovelace", "tags": ["math", "code"]}, {"id": 2, "name": "Bob", "email": "bob@y.org", "active": false, "age": 24, "role": "user", "secret": "b", "is_admin": false, "profile": {"name": "Bob", "email": "bob@y.org"}, "score": 40, "first_name": "Bob", "last_name": "Smith"}, {"id": 3, "name": "Cy", "email": "cy@x.com", "active": true, "age": 42, "role": "user", "secret": "c", "is_admin": false, "score": 90, "first_name": "Cy", "last_name": "Young"}], "user": {"id": 42, "name": "Ada", "email": "ada@x.com", "tags": ["math", "code"], "profile": {"name": "Ada", "email": "ada@x.com"}, "active": true, "verified": true}, "orders": [{"id": 1, "customer": 1, "customer_id": 1, "cid": 1, "amount": 100, "status": "paid", "total": 100, "date": "2024-01-01"}, {"id": 2, "customer": 1, "customer_id": 1, "cid": 1, "amount": 50, "status": "open", "total": 50, "date": "2024-02-01"}, {"id": 3, "customer": 2, "customer_id": 2, "cid": 2, "amount": 75, "status": "paid", "total": 75, "date": "2024-03-01"}], "events": [{"sev": 1, "msg": "ok", "kind": "start"}, {"sev": 2, "msg": "warn", "kind": "end"}, {"sev": 3, "msg": "err", "kind": "start"}], "rows": [{"age": "30", "price": "3.14"}]}
 ```
 
@@ -56,7 +56,7 @@ Every `Demand`-aware sink lets the source skip work. Concrete impact:
 
 For wide objects, **field projection** is the other big win:
 
-```text
+```jetro
 $.users.map(u => u.pick(id, name))
 ```
 
@@ -67,7 +67,7 @@ tape tokens.
 
 ### Mid-chain materialization
 
-```text
+```jetro
 $.users
   .filter(@.active)
   .collect()                # unnecessary
@@ -78,14 +78,14 @@ The `.collect()` forces a full pass before `.map`. Drop it.
 
 ### Pre-sort barriers blocking demand
 
-```text
+```jetro
 $.events.sort(@.ts).first()
 ```
 
 `.sort` is a barrier — must see every element. The `.first()` doesn't help.
 Rewrite with `min_by`:
 
-```text
+```jetro
 $.events.min_by(@.ts)
 ```
 
@@ -93,13 +93,13 @@ One pass, no allocation of the sorted array.
 
 ### Per-element joins (O(n×m))
 
-```text
+```jetro
 $.orders.map(o => o.merge({name: $.users.find(@.id == o.user_id).name}))
 ```
 
 Each `find` rescans `$.users`. For large data, build a lookup once:
 
-```text
+```jetro
 let by_id = $.users.index_by(@.id) in
   $.orders.map(o => o.merge({name: by_id[o.user_id].name}))
 ```
@@ -108,27 +108,27 @@ Or use `equi_join`.
 
 ### Repeated sub-expressions
 
-```text
+```jetro
 $.user.profile.name + " <" + $.user.profile.email + ">"
 ```
 
 Three tape walks. Bind once:
 
-```text
+```jetro
 let p = $.user.profile in
   f"{p.name} <{p.email}>"
 ```
 
 ### Heavy lambdas in barriers
 
-```text
+```jetro
 $.rows.unique_by(@.to_string())
 ```
 
 `unique_by` calls the lambda once per row. If the projection is
 non-trivial (regex, deep traversal), pre-project once:
 
-```text
+```jetro
 $.rows.map(r => r.merge({_k: r.to_string()}))
      .unique_by(@._k)
      .map(@.omit(_k))

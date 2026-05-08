@@ -4,11 +4,11 @@
 
 Python-style:
 
-```text
+```jetro
 expr if condition else fallback
 ```
 
-```text
+```jetro
 DOC:    {"x": 10}
 QUERY:  "big" if $.x > 5 else "small"
 OUT:    "big"
@@ -20,11 +20,11 @@ Right-associative; chain via parens for clarity.
 
 Catch evaluation errors:
 
-```text
+```jetro
 try expr else fallback
 ```
 
-```text
+```jetro
 QUERY:  try $.maybe.deep.path else "missing"
 OUT:    "missing"
 
@@ -38,14 +38,14 @@ QUERY:  try $.xs[0].name.upper() else "n/a"
 
 Local bindings:
 
-```text
+```jetro
 let x = $.users.count() in
   f"there are {x} users"
 ```
 
 Multi-binding:
 
-```text
+```jetro
 let a = 1, b = 2 in a + b   # equiv: let a=1 in let b=2 in a+b
 ```
 
@@ -53,7 +53,7 @@ let a = 1, b = 2 in a + b   # equiv: let a=1 in let b=2 in a+b
 
 ## Pattern match
 
-```text
+```jetro
 match value with {
   pattern1 -> expr1,
   pattern2 when guard -> expr2,
@@ -78,7 +78,7 @@ match value with {
 
 ### Guards
 
-```text
+```jetro
 match $.x with {
   v when v > 100 -> "big",
   v when v > 10 -> "medium",
@@ -88,7 +88,7 @@ match $.x with {
 
 ### Worked example
 
-```text
+```jetro
 DOC:    {"event": {"kind": "click", "x": 100, "y": 200}}
 QUERY:
   match $.event with {
@@ -101,13 +101,13 @@ OUT:    "click@100,200"
 
 ### Deep match
 
-```text
+```jetro
 $..match { pattern -> expr, _ -> null }
 ```
 
 Walks every descendant; returns matched results as an array.
 
-```text
+```jetro
 $..match! { pattern -> expr }      # first match only, early-stops
 ```
 
@@ -123,11 +123,11 @@ multiple `if` clauses are folded with `and`.
 
 ### List
 
-```text
+```jetro
 [expr for x in source if cond1 if cond2 ...]
 ```
 
-```text
+```jetro
 DOC:    {"xs": [1, 2, 3, 4, 5]}
 
 QUERY:  [n*n for n in $.xs if n > 2]
@@ -139,13 +139,13 @@ OUT:    [2,3,4]
 
 ### Object
 
-```text
+```jetro
 {key: value for x in source if cond}
 {k: v for [k, v] in pairs}
 {k: v for k, v in pairs}
 ```
 
-```text
+```jetro
 DOC:    {"pairs": [["a", 1], ["b", 2]]}
 
 QUERY:  {k: v for [k, v] in $.pairs}
@@ -157,7 +157,7 @@ OUT:    {"1":1,"2":4,"3":9}
 
 Iterating an object yields `{key, value}` records:
 
-```text
+```jetro
 DOC:    {"o": {"a": 1, "b": 2}}
 QUERY:  {e.key: e.value*10 for e in $.o}
 OUT:    {"a":10,"b":20}
@@ -167,14 +167,14 @@ OUT:    {"a":10,"b":20}
 
 Deduplicating comprehension. Returns an array of unique values.
 
-```text
+```jetro
 QUERY:  {n*n for n in [-2, -1, 0, 1, 2]}
 OUT:    [4,1,0]
 ```
 
 ### Generator
 
-```text
+```jetro
 (x for x in items)
 ```
 
@@ -186,7 +186,7 @@ reducer or barrier.
 Inside a `patch $ {…}` body, `key: expr when cond` skips the assignment when
 `cond` is falsy:
 
-```text
+```jetro
 patch $ {
   status: "active" when $.verified
 }

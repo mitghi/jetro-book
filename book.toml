@@ -11,7 +11,8 @@ preferred-dark-theme = "navy"
 git-repository-url = "https://github.com/mitghi/jetro-book"
 edit-url-template = "https://github.com/mitghi/jetro-book/edit/main/{path}"
 site-url = "/jetro-book/"
-additional-css = ["theme/extra.css"]
+additional-css = ["theme/extra.css", "theme/jetro.css"]
+additional-js = ["theme/jetro.hljs.js"]
 
 [output.html.fold]
 enable = true

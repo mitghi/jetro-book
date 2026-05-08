@@ -4,7 +4,7 @@
 
 Examples below run against:
 
-```text
+```jetro
 DOC:    {"users": [{"id": 1, "name": "Ada", "email": "ada@x.com", "active": true, "age": 30, "role": "admin", "secret": "a", "is_admin": true, "profile": {"name": "Ada", "email": "ada@x.com"}, "score": 85, "first_name": "Ada", "last_name": "Lovelace", "tags": ["math", "code"]}, {"id": 2, "name": "Bob", "email": "bob@y.org", "active": false, "age": 24, "role": "user", "secret": "b", "is_admin": false, "profile": {"name": "Bob", "email": "bob@y.org"}, "score": 40, "first_name": "Bob", "last_name": "Smith"}, {"id": 3, "name": "Cy", "email": "cy@x.com", "active": true, "age": 42, "role": "user", "secret": "c", "is_admin": false, "score": 90, "first_name": "Cy", "last_name": "Young"}], "user": {"id": 42, "name": "Ada", "email": "ada@x.com", "tags": ["math", "code"], "profile": {"name": "Ada", "email": "ada@x.com"}, "active": true, "verified": true}}
 ```
 
@@ -24,7 +24,7 @@ This chapter documents the **method-call** versions.
 - **Signature (intended):** `Any, String -> Any | null`
 - **Behavior (intended):** Read a value at a slash-separated path.
 
-```text
+```jetro
 DOC:    {"user": {"profile": {"name": "Ada"}}}
 QUERY:  $.get_path("user")
 OUT:    {"profile":{"name":"Ada"}}
@@ -38,7 +38,7 @@ OUT:    {"name":"Ada"}
 - **Behavior:** Return a copy with `value` written at `path`. Creates
   intermediate objects as needed.
 
-```text
+```jetro
 QUERY:  $.set_path("user/profile/email", "ada@example.com")
 ```
 
@@ -47,7 +47,7 @@ QUERY:  $.set_path("user/profile/email", "ada@example.com")
 - **Signature:** `Any, String -> Any`
 - **Behavior:** Return a copy with the leaf at `path` removed.
 
-```text
+```jetro
 QUERY:  $.del_path("user/secret")
 ```
 
@@ -57,7 +57,7 @@ QUERY:  $.del_path("user/secret")
 - **Behavior:** Remove all listed paths in one pass. Cheaper than chained
   `del_path` for many removals.
 
-```text
+```jetro
 QUERY:  $.del_paths(["user/secret", "user/temp", "session/csrf"])
 ```
 
@@ -67,7 +67,7 @@ QUERY:  $.del_paths(["user/secret", "user/temp", "session/csrf"])
 - **Behavior:** True if a value exists at `path`. Distinguishes "missing" from
   "explicit null":
 
-```text
+```jetro
 DOC:    {"a": null}
 QUERY:  $.has_path("a")     OUT: false
 QUERY:  $.has_path("b")     OUT: false
@@ -79,7 +79,7 @@ QUERY:  $.has_path("b")     OUT: false
 - **Behavior:** Flatten a nested object into a single-level object with
   joined keys.
 
-```text
+```jetro
 DOC:    {"a": {"b": 1, "c": 2}, "d": 3}
 QUERY:  $.flatten_keys()
 OUT:    {"a.b":1,"a.c":2,"d":3}
@@ -93,7 +93,7 @@ OUT:    {"a.b":1,"a.c":2,"d":3}
 - **Signature:** `Object -> Object`
 - **Behavior:** Inverse of `flatten_keys`.
 
-```text
+```jetro
 QUERY:  {"a/b": 1, "a/c": 2}.unflatten_keys()
 OUT:    {"a/b":1,"a/c":2}
 ```
@@ -115,7 +115,7 @@ a `patch` and operates on the rooted document path.
 Apply a set of field updates to one or more selected subtrees. Plain keys
 update fields *below* the receiver; quoted keys carry full paths.
 
-```text
+```jetro
 DOC:    {"books": [
   {"title": "Dune", "year": 1965, "tags": ["sf"]},
   {"title": "Hyperion", "year": 1989, "tags": ["sf", "hugo"]}
@@ -143,7 +143,7 @@ field values.
 `@` inside the body is the current value at the *target field* (handy
 inside path keys); `$` is the original root.
 
-```text
+```jetro
 QUERY:  $.books[*].update({tags: tags.append("modern") when year > 1980})
 OUT:    {"books":[{"tags":["sf"],"title":"Dune","year":1965},{"tags":["sf","hugo","modern"],"title":"Hyperion","year":1989}]}
 ```
@@ -153,13 +153,13 @@ OUT:    {"books":[{"tags":["sf"],"title":"Dune","year":1965},{"tags":["sf","hugo
 When the receiver is `$`, quoted keys carry full paths, including
 wildcards and `DELETE`:
 
-```text
+```jetro
 QUERY:  $.update({"books[*].tags": @.append("test"), active: false})
 DOC:    {"books": [{"tags": ["sf"]}], "active": true}
 OUT:    {"active":false,"books":[{"tags":["sf","test"]}]}
 ```
 
-```text
+```jetro
 DOC:    {"users": [{"id":1,"secret":"a"}, {"id":2,"secret":"b"}]}
 QUERY:  $.update({"users[*].secret": DELETE})
 OUT:    {"users":[{"id":1},{"id":2}]}
@@ -169,7 +169,7 @@ OUT:    {"users":[{"id":1},{"id":2}]}
 
 Both selectors and quoted path keys support a filtered wildcard:
 
-```text
+```jetro
 DOC:    {"books": [
   {"title": "Dune", "year": 1965, "tags": ["sf"]},
   {"title": "Hyperion", "year": 1989, "tags": ["sf"]}
@@ -187,7 +187,7 @@ OUT:    {"books":[{"tags":["sf"],"title":"Dune","year":1965},{"tags":["sf","mode
 The classic shape: a slash- or dot-separated path plus an expression.
 `@` inside the expression is the current value at `path`.
 
-```text
+```jetro
 DOC:    {"counters": {"visits": 10, "clicks": 3}}
 QUERY:  $.update("counters.visits", @ + 1)
 OUT:    {"counters":{"clicks":3,"visits":11}}
@@ -209,7 +209,7 @@ OUT:    {"counters":{"clicks":3,"visits":11}}
 
 ## Worked example
 
-```text
+```jetro
 DOC:    {"users": [
   {"id": 1, "secret": "a", "name": "Ada"},
   {"id": 2, "secret": "b", "name": "Bob"}
@@ -228,7 +228,7 @@ the planner can use literal field names.
 
 ## Practical examples
 
-```text
+```jetro
 # Single-key write (preferred over set_path for v0.5)
 $.user.name.set("Ada Lovelace")                  # chain-write
 

@@ -4,7 +4,7 @@
 
 Examples below run against:
 
-```text
+```jetro
 DOC:    {"users": [{"id": 1, "name": "Ada", "email": "ada@x.com", "active": true, "age": 30, "role": "admin", "secret": "a", "is_admin": true, "profile": {"name": "Ada", "email": "ada@x.com"}, "score": 85, "first_name": "Ada", "last_name": "Lovelace", "tags": ["math", "code"]}, {"id": 2, "name": "Bob", "email": "bob@y.org", "active": false, "age": 24, "role": "user", "secret": "b", "is_admin": false, "profile": {"name": "Bob", "email": "bob@y.org"}, "score": 40, "first_name": "Bob", "last_name": "Smith"}, {"id": 3, "name": "Cy", "email": "cy@x.com", "active": true, "age": 42, "role": "user", "secret": "c", "is_admin": false, "score": 90, "first_name": "Cy", "last_name": "Young"}], "events": [{"sev": 1, "msg": "ok", "kind": "start"}, {"sev": 2, "msg": "warn", "kind": "end"}, {"sev": 3, "msg": "err", "kind": "start"}], "xs": [1, 2, 3, 4, 5]}
 ```
 
@@ -16,7 +16,7 @@ Methods that drop elements based on a predicate.
 - **Demand law:** `FilterLike` — `FirstInput(n)` from downstream becomes
   `UntilOutput(n)` upstream.
 
-```text
+```jetro
 $.users.filter(u => u.active)
 $.users.filter(@.age >= 18)
 $.users.filter(@.email ~= "@admin\.")
@@ -25,7 +25,7 @@ $.users.filter(@.email ~= "@admin\.")
 `filter` is the universal predicate stage. Combine with `.take(n)` for
 bounded scans:
 
-```text
+```jetro
 $.events.filter(@.severity >= 3).take(10)
 ```
 
@@ -37,7 +37,7 @@ full scan.
 - **Signature:** `Array<A> -> A | null` *(first match only on this branch)*
 - **Demand law:** `FilterLike` with `FirstInput(1)` → source.
 
-```text
+```jetro
 DOC:    {"users": [{"id":1,"role":"user"},{"id":2,"role":"admin"}]}
 QUERY:  $.users.find(@.role == "admin")
 OUT:    {"id":2,"role":"admin"}
@@ -51,7 +51,7 @@ OUT:    {"id":2,"role":"admin"}
 - **Signature:** `Array<A> -> Array<A>`
 - **Behavior:** Like `filter`. Alias kept for readability.
 
-```text
+```jetro
 $.users.find_all(@.role == "admin")
 ```
 
@@ -62,7 +62,7 @@ Equivalent to `.filter(@.role == "admin")`. The two are interchangeable.
 - **Signature:** `Array<Any> -> Array<Any>`
 - **Behavior:** Drop nulls.
 
-```text
+```jetro
 QUERY:  [1, null, 2, null, 3].compact()
 OUT:    [1,2,3]
 ```
@@ -75,7 +75,7 @@ Equivalent to `.filter(@ != null)`, but reads better and avoids a lambda.
 - **Behavior:** Take elements while `pred` is true; stop at the first false
   (don't keep checking).
 
-```text
+```jetro
 QUERY:  [1, 2, 3, 4, 1, 2].take_while(@ < 3)
 OUT:    [1,2]
 ```
@@ -87,7 +87,7 @@ Demand law: bounded — terminates the source as soon as `pred` flips.
 - **Signature:** `Array<A> -> Array<A>`
 - **Behavior:** Drop the leading run where `pred` holds; emit the rest.
 
-```text
+```jetro
 QUERY:  [1, 2, 3, 4, 1, 2].drop_while(@ < 3)
 OUT:    [3,4,1,2]
 ```
@@ -97,7 +97,7 @@ OUT:    [3,4,1,2]
 - **Signature:** `Array<A> -> Array<A>`
 - **Behavior:** Inverse of `filter`. Drop elements where `pred` is true.
 
-```text
+```jetro
 QUERY:  $.xs.remove(@ < 0)
 ```
 
@@ -111,7 +111,7 @@ a filtered object.
 
 ## Practical examples
 
-```text
+```jetro
 DOC:    {"users":[
   {"id":1,"name":"Ada","active":true,"age":30},
   {"id":2,"name":"Bob","active":false,"age":24},
@@ -145,7 +145,7 @@ OUT:    [1,2,3]
 
 ## Worked demand example
 
-```text
+```jetro
 DOC:    {"events": [
   {"sev": 1, "msg": "ok"},
   {"sev": 2, "msg": "warn"},

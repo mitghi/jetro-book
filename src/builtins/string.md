@@ -24,7 +24,7 @@ Scalar string operations. Lift with `.map` to apply to an array of strings.
 | `trim_left` | Strip leading whitespace |
 | `trim_right` | Strip trailing whitespace |
 
-```text
+```jetro
 QUERY:  "  hi  ".trim()     OUT: "hi"
 QUERY:  "  hi  ".trim_left()     OUT: "hi  "
 ```
@@ -44,7 +44,7 @@ If `char` is omitted, space is used.
 `indent(n)` takes an **integer** (number of spaces); the prefix is fixed
 spaces.
 
-```text
+```jetro
 QUERY:  "line1\nline2".indent(2)
 OUT:    "  line1\n  line2"
 ```
@@ -53,14 +53,14 @@ OUT:    "  line1\n  line2"
 subsequent line that begins with the same prefix. It is **not** a
 common-prefix dedent across all lines:
 
-```text
+```jetro
 QUERY:  "  a\n  b".dedent()
 OUT:    "a\nb"
 ```
 
 ## Slice
 
-```text
+```jetro
 "hello world".slice(0, 5)      # "hello"
 "hello world".slice(6)         # "world"
 "hello".slice(-3)              # "llo"
@@ -70,7 +70,7 @@ OUT:    "a\nb"
 
 ## Repeat
 
-```text
+```jetro
 "ab".repeat(3)        # "ababab"
 ```
 
@@ -83,7 +83,7 @@ OUT:    "a\nb"
 | `replace_re(pattern, with)` | Regex-aware single replacement |
 | `replace_all_re(pattern, with)` | Regex-aware all replacements |
 
-```text
+```jetro
 QUERY:  "hello hello".replace("hello", "hi")
 OUT:    ["hi hello"]
 
@@ -103,7 +103,7 @@ OUT:    "abc#def"
 
 ## Strip
 
-```text
+```jetro
 "prefix-foo".strip_prefix("prefix-")  # "foo"
 "foo.txt".strip_suffix(".txt")        # "foo"
 ```
@@ -121,7 +121,7 @@ If the prefix/suffix isn't present, returns the input unchanged.
 | `html_escape` | `&` → `&amp;`, `<` → `&lt;`, etc. |
 | `html_unescape` | Reverse of `html_escape` |
 
-```text
+```jetro
 QUERY:  "hello world".to_base64()     OUT: "aGVsbG8gd29ybGQ="
 QUERY:  "a b".url_encode()     OUT: "a%20b"
 QUERY:  "<b>".html_escape()     OUT: "&lt;b&gt;"
@@ -134,7 +134,7 @@ upstream needs to produce.
 
 ## Practical examples
 
-```text
+```jetro
 # Normalise display names
 $.users.map(u => u.name.trim().title_case().first())
 

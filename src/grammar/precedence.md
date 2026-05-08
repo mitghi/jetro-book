@@ -25,28 +25,28 @@ noted.
 
 **Pipe vs method call.**
 
-```text
+```jetro
 $.x | upper           # ✗ — interprets `upper` as a name to pipe into
 $.x.upper()           # ✓ — method call
 ```
 
 **Comparison chains.**
 
-```text
+```jetro
 1 < x < 10            # ✗ — parses as `(1 < x) < 10`
 1 < x and x < 10      # ✓
 ```
 
 **Ternary mid-chain.**
 
-```text
+```jetro
 $.x.upper() if cond else $.x   # parses fine — the ternary wraps the whole
                                 # left expression
 ```
 
 **Negation tightness.**
 
-```text
+```jetro
 not a == b            # parses as `(not a) == b` — surprising!
 not (a == b)          # parens are clearer
 a != b                # cleanest
@@ -54,13 +54,13 @@ a != b                # cleanest
 
 **Coalesce + comparison.**
 
-```text
+```jetro
 $.x ?? 0 > 5          # parses as `($.x ?? 0) > 5` (low-precedence coalesce)
 ```
 
 **Try captures errors only.**
 
-```text
+```jetro
 try $.x.parse_int() else 0
 ```
 

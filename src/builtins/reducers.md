@@ -12,7 +12,7 @@ the streaming pipeline.
 | `min` | `Array<Number\|String> -> ...` | Empty → `null` |
 | `max` | `Array<Number\|String> -> ...` | Empty → `null` |
 
-```text
+```jetro
 QUERY:  [1,2,3,4].sum()     OUT: 10
 QUERY:  [1,2,3,4].avg()     OUT: 2.5
 QUERY:  [3,1,4,1,5].min()     OUT: 1.0
@@ -27,7 +27,7 @@ Demand law: `NumericReducer` — `ValueNeed::Numeric`, `pull = All`.
 - **Behavior:** Element count.
 - **Demand:** `All` inputs, `ValueNeed::None` (no payload decoded).
 
-```text
+```jetro
 QUERY:  $.users.count()
 QUERY:  $.users.filter(@.active).count()
 ```
@@ -49,7 +49,7 @@ For now, use `.unique().count()` for exact distinct count.
 - **Signature:** `Array<A> -> Bool` (with `pred: A -> Bool`)
 - **Behavior:** True if any element matches. Short-circuits.
 
-```text
+```jetro
 QUERY:  $.users.any(@.role == "admin")
 OUT:    false
 ```
@@ -59,7 +59,7 @@ OUT:    false
 - **Signature:** `Array<A> -> Bool`
 - **Behavior:** True if every element matches. Short-circuits on first false.
 
-```text
+```jetro
 QUERY:  $.flags.all(@ == true)
 ```
 
@@ -68,7 +68,7 @@ QUERY:  $.flags.all(@ == true)
 - **Signature:** `Array<A> -> Number | null`
 - **Behavior:** Zero-based index of first match, or null.
 
-```text
+```jetro
 QUERY:  ["a","b","c"].find_index(@ == "b")
 OUT:    1
 ```
@@ -78,7 +78,7 @@ OUT:    1
 - **Signature:** `Array<A> -> Array<Number>`
 - **Behavior:** All indices where `pred` matches.
 
-```text
+```jetro
 QUERY:  [10, 20, 5, 30, 8].indices_where(@ < 15)
 OUT:    [0,2,4]
 ```
@@ -88,7 +88,7 @@ OUT:    [0,2,4]
 - **Signature:** `Array<A> -> A | null`
 - **Behavior:** Element with the maximum / minimum projected key.
 
-```text
+```jetro
 QUERY:  $.books.max_by(@.year)
 QUERY:  $.users.min_by(@.age)
 ```
@@ -110,7 +110,7 @@ allocates the sorted array first.
 
 ## Practical examples
 
-```text
+```jetro
 DOC:    {"books":[
   {"title":"Dune","year":1965,"price":15},
   {"title":"Foundation","year":1951,"price":10},
