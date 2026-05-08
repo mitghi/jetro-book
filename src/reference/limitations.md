@@ -6,7 +6,7 @@ Use it as a backlog: items here should drop as the runtime catches up.
 
 ## v0.5.5 — fixed in this release
 
-The 14 audit-surfaced bugs were all addressed:
+The 14 audit-surfaced bugs were addressed plus a follow-up sweep:
 
 - ✅ `[*]` wildcard parses (mid-chain expands to `.map(@ + rest)`).
 - ✅ `[a:b:c]` and `[::n]` (incl. `[::-1]` reverse) — Python-style step slicing.
@@ -16,13 +16,22 @@ The 14 audit-surfaced bugs were all addressed:
 - ✅ `entries()`/`keys()`/`values()` no longer triple-wrap their array result.
 - ✅ `parse_int(radix)` — base-aware integer parsing with prefix stripping.
 - ✅ `to_csv(headers)` / `to_tsv(headers)` — explicit header column ordering.
-- ✅ `accumulate(init, fn)` — explicit-init fold variant (single-arg form preserved).
-- ✅ `rec` fixpoint uses deep structural equality (was scalar-only, looped on Obj inputs).
-
-Tests: 92 new in `tests/grammar_extensions`, `tests/strslice_arith`,
-`tests/entries_wrap`, `tests/builtin_migrations`. 1245 lib tests pass.
-Bench vs `pre-fix14`: no regression > 2%; `match_range_scan` -3.6%
-improved.
+- ✅ `accumulate(init, fn)` and `accumulate(fn)` — both forms.
+- ✅ `partition(pred)` — chained and standalone.
+- ✅ `approx_count_distinct()` — HyperLogLog.
+- ✅ `missing("k1", "k2", ...)` — returns missing-keys array.
+- ✅ `get_path("a/b/c")` and `get_path("a.b.c")` — multi-segment paths.
+- ✅ `dedent()` — common-prefix removal.
+- ✅ `remove(pred)` — predicate evaluated.
+- ✅ `enumerate()` — survives composition with `map` / `filter`.
+- ✅ `pairwise()` — works on path sources.
+- ✅ `.has(v)` returns boolean.
+- ✅ `rec(fn)` fixpoint via deep structural equality.
+- ✅ `update(path, fn)` and functional `.update({...})` — see [Path Mutation](../builtins/path-mutation.md#update).
+- ✅ Filtered wildcard `[* if pred]`.
+- ✅ Wildcard chain modify `$.xs[*].field.modify(@)`.
+- ✅ Object literal as method receiver `{a: 1}.keys()` and `({a: 1}).keys()`.
+- ✅ Regex escape: `"\d"` and `"\\d"` both parse as digit class.
 
 Items below are still outstanding.
 
@@ -38,28 +47,19 @@ Organized into:
 
 ## 1. Unsupported builtins
 
-Return runtime errors like `"X: builtin unsupported"` or `"X: builtin not
-migrated to builtins.rs AST adapter"`. Spec exists in `defs.rs`; runtime
-hookup pending.
+Return runtime errors. Spec exists in `defs.rs`; runtime hookup pending.
 
 | Method | Error | Workaround |
 |---|---|---|
-| `accumulate` | `"not migrated to builtins.rs AST adapter"` | `cummax` / `cummin` for running min/max; otherwise drive fold from host |
-| `partition` (chained) | Pipeline-unsupported in chained position; output shape unstable | Two filters: `[xs.filter(p), xs.filter(not p)]` |
-| `zip_shape` | `"unsupported"` | `pivot` for some shapes; otherwise hand-zip |
-| `group_shape` | `"unsupported"` | Group manually by `.keys().sort().join(",")` projection |
-| `approx_count_distinct` | `"unsupported"` | `.unique().count()` (exact) |
-| `parse_int(radix)` | `"parse_int: builtin not migrated to builtins.rs AST adapter"` | No-arg form (`"42".parse_int()`) works for base-10 only |
-| `to_csv([headers])` | `"to_csv: builtin not migrated to builtins.rs AST adapter"` | No-arg `to_csv()` works; for custom header order, project keys with `.pick(...)` first |
+| `zip_shape({a, b})` arg form | `"args must be 'name = expr' or bare identifier"` | No-arg `zip_shape()` works on uniform-key arrays |
+| `group_shape(shape)` arg form | `"requires shape"` | No-arg `group_shape()` keys by sorted-key projection |
+| `rec()` no-arg | `"Rec: builtin unsupported"` | `rec(fn)` 1-arg form is supported (see §2) |
 
 ### Fix-list (engine)
 
-- [ ] Wire `Accumulate::apply_*` through `builtins.rs` AST adapter.
-- [ ] Wire `Partition` for pipeline planner; decide canonical output shape (tuple vs object).
-- [ ] Implement `ZipShape`, `GroupShape` runtime.
-- [ ] Implement HyperLogLog backend for `approx_count_distinct`.
-- [ ] Add radix-aware overload of `parse_int`.
-- [ ] Add header-array overload of `to_csv`.
+- [ ] Wire `ZipShape` shape-arg form (named `name = expr` mappings).
+- [ ] Wire `GroupShape` shape-arg form (object shape or lambda projection).
+- [ ] Implement `rec()` no-arg form (intended: walk-to-fixpoint default).
 
 ---
 
@@ -69,31 +69,19 @@ Execute without erroring but produce wrong results.
 
 | Method | Symptom | Workaround |
 |---|---|---|
-| `rec` | `"rec: exceeded 10000 iterations without reaching fixpoint"` even on simple inputs | `walk` / `walk_pre` with manual shape check |
-| `missing(...keys)` | Always returns `false` instead of the missing-keys array | `["k1","k2"].filter(k => not $.has_path(k))` |
-| `get_path("a/b/c")` | Resolves only single-key paths; nested slash/dot returns null | Direct path navigation `$.a.b.c` (literal); for dynamic, walk manually with chained `[expr]` |
-| `dedent()` | Strips first line's prefix from matching subsequent lines, **not** common-leading-whitespace | Hand-process if true dedent needed |
-| `remove(pred)` | Returns input unchanged (predicate not applied) | `.filter(not pred)` — semantically equivalent |
-| `enumerate()` after a streaming stage | Loses pairing — emits values without indices when chained behind `.map(...)` | Apply `enumerate()` directly on the source, before `.map`/`.filter` |
-| `pairwise()` on path source | Returns input array unchanged instead of consecutive pairs | Works on literal sources (`[1,2,3].pairwise()`); for path, materialize with `let xs = $.prices in [...].pairwise()` workaround |
-| `.has(v)` method on array | Returns the array itself, not boolean | Use `.includes(v)` for boolean membership |
+| `rec(fn, cond)` 2-arg | `"rec: exceeded 10000 iterations"` — conditional-bound form not implemented | Pass an idempotent `fn` so `rec(fn)` 1-arg detects fixpoint; or drive iteration from host |
+| `rec(fn)` on non-idempotent | Iteration cap fires when `fn(x) != x` for some `x` | Make `fn` idempotent, or use `walk` / `walk_pre` for traversal-style transforms |
 
 ### Fix-list (engine)
 
-- [ ] Fix `Rec` fixpoint detection — compare structurally, bound iteration safely.
-- [ ] Fix `Missing` to compute and return the actual missing-keys list.
-- [ ] Implement multi-segment slash/dot paths in `get_path` / `del_path`.
-- [ ] Make `dedent()` strip common leading whitespace per Python `textwrap.dedent` semantics.
-- [ ] Wire `.remove(pred)` predicate evaluation; currently lambda body is ignored.
-- [ ] Make `.enumerate()` survive composition with downstream stages (`map`, `filter`).
-- [ ] Make `.pairwise()` work on path sources (currently bypassed by some pipeline path).
-- [ ] Make `.has(v)` method return boolean (currently returns the receiver).
+- [ ] Implement `rec(fn, cond)` — iterate while `cond(@)` holds.
+- [ ] Document or guard against runaway iteration when fixpoint never converges.
 
 ---
 
 ## 3. Parser / grammar gaps
 
-Syntactic forms that look correct but parse-error or behave unexpectedly.
+Syntactic forms that look correct but parse-error.
 
 ### 3.1 No `in` operator
 
@@ -128,24 +116,14 @@ $.xs{@.k > 1}
 $.users.sort(@.year)
 ```
 
-### 3.3 Object literal as method receiver
-
-`{a: 1, b: 2}.keys()` parses leading `{...}` as inline filter, not literal
-object. Even `({a:1}).keys()` returns array-wrapped due to path-call
-wrapping. Workaround:
-
-```text
-let o = {a: 1, b: 2} in o.keys()
-```
-
-### 3.4 Pattern match shorthand `{id, name}` not supported
+### 3.3 Pattern match shorthand `{id, name}` not supported
 
 ```text
 match obj with { {id, name} -> [id, name] }     # ✗ parse error
 match obj with { {id: i, name: n} -> [i, n] }   # ✓
 ```
 
-### 3.5 Rest pattern `..rest` not supported
+### 3.4 Rest pattern `..rest` not supported
 
 ```text
 match obj with { {host, port, ..rest} -> rest }     # ✗ parse error
@@ -153,18 +131,11 @@ match obj with { {host, port, ..rest} -> rest }     # ✗ parse error
 
 Bind explicitly + compute rest outside the match.
 
-### 3.6 Array-pattern destructure in lambda body
-
-```text
-$.entries.map(([k, v]) => {k, v})              # ✗ parse error
-$.entries.map(e => {k: e[0], v: e[1]})         # ✓
-```
-
-### 3.7 Comments
+### 3.5 Comments
 
 There are no comments inside a query. Strip client-side.
 
-### 3.8 `[expr]` vs `{expr}`
+### 3.6 `[expr]` vs `{expr}`
 
 Inline filter is `{predicate}`. `[expr]` is index/slice.
 
@@ -177,10 +148,8 @@ $.xs[@.active]        # ✗ index expression
 
 - [ ] Optional: add `in` operator as sugar for `.includes(v)` for jq parity.
 - [ ] Allow bare-path `.field` inside method args (sugar for `@.field`).
-- [ ] Allow `{a: 1, b: 2}.method()` to parse as literal-object call.
 - [ ] Add object-pattern shorthand `{id, name}` (binds to identifiers of same name).
 - [ ] Add rest pattern `{..rest}` and `[head, ...tail]` in lambda destructure.
-- [ ] Add array-pattern destructure in lambda parameter position.
 
 ---
 
@@ -215,32 +184,21 @@ QUERY:  $.x | @.type()          →  "number"
 This affects most book examples that show bare-scalar `OUT:` for a query
 rooted at `$`.
 
-### 4.2 Regex escapes — single backslash
-
-Inside jetro string literals, regex specials use a **single** backslash:
-
-```text
-"a1b2".re_match("\d")          # ✓ true
-"a1b2".re_match("\\d")         # ✗ false (sends literal \\d to regex)
-```
-
-Opposite of host languages like Python or JavaScript.
-
-### 4.3 `.replace(needle, with)` is single-occurrence
+### 4.2 `.replace(needle, with)` is single-occurrence
 
 ```text
 "hello hello".replace("hello", "hi")          # → "hi hello"  (only first)
 "hello hello".replace_all("hello", "hi")      # → "hi hi"
 ```
 
-### 4.4 `indent(n)` takes an integer count, not a prefix string
+### 4.3 `indent(n)` takes an integer count, not a prefix string
 
 ```text
 "a\nb".indent(2)            # ✓ → "  a\n  b"
 "a\nb".indent("  ")         # ✗ runtime error "expected number argument"
 ```
 
-### 4.5 `from_json` needs a path or `let`-bound receiver
+### 4.4 `from_json` needs a path or `let`-bound receiver
 
 ```text
 "{\"a\":1}".from_json()             # ✗ parse error
@@ -248,7 +206,7 @@ $.s.from_json()                     # ✓
 let s = "{\"a\":1}" in s.from_json() # ✓
 ```
 
-### 4.6 `.to_json()` over an array of objects emits per-element JSON
+### 4.5 `.to_json()` over an array of objects emits per-element JSON
 
 ```text
 $.users.to_json()
@@ -258,33 +216,13 @@ $.users.to_json()
 For a single JSON serialisation of the whole array, use the host's encoder
 or `to_json` on the literal array.
 
-### 4.7 Comprehensions over `$.path` and pair destructure (FIXED)
-
-List, dict, set, and generator comprehensions now iterate path sources
-correctly (including `Val::IntVec` / `FloatVec` / `StrVec` / `StrSliceVec`
-/ `ObjVec` columnar fast paths) and accept pair-destructure binding forms.
-
-Multiple `if` clauses are folded with `and` at parse time. Both
-`for k, v in pairs` and `for [k, v] in pairs` work as 2-var destructure.
-
-```text
-[n*n for n in $.xs if n > 1 if n < 5]    # ✓
-{k: v for [k, v] in pairs}                # ✓
-{n: n*n for n in $.xs}                    # ✓
-```
-
-See `tests::comprehensions` (63 tests) for full coverage.
-
 ### Fix-list (runtime)
 
 - [ ] Decide canonical scalar-on-path output shape: bare scalar or array. Currently mixed; book assumes bare.
-- [ ] Document or change regex escape policy. Make jetro string literals process `\d`, `\n`, `\t` etc consistently.
-- [ ] Either alias `replace = replace_all` or document the asymmetry prominently in the parser/runtime.
+- [ ] Either alias `replace = replace_all` or document the asymmetry prominently.
 - [ ] Allow `indent` to accept a string prefix (for non-space indents) or rename to `indent_n`.
 - [ ] Allow `from_json` on parenthesized string literal expressions.
 - [ ] Make `to_json` on array context emit single document, not array of docs. Add `to_json_each` if per-element is desired.
-- [x] Fix list-comp source iteration to walk `$.path` per-element. ✅ (jetro 0.5.5)
-- [x] Fix dict-comp destructure form `{k: v for [k, v] in pairs}`. ✅ (jetro 0.5.5)
 
 ---
 
@@ -326,16 +264,21 @@ calls work with parens:
 
 ```text
 $.orders.equi_join($.customers, "cid", "id", (o, c) => {buyer: c.name})
+$.xs.accumulate(0, (a, b) => a + b)
 ```
 
-Array-pattern destructure of the args (`([a, b]) => …`) does **not** parse
-— see [3.6](#36-array-pattern-destructure-in-lambda-body).
+Array-pattern destructure of a single arg is supported:
+
+```text
+$.entries.map(([k, v]) => {k, v})    # ✓
+```
 
 ---
 
 ## Versions
 
-This page reflects v0.5.4 behavior empirically tested. The verification
-harness lives in `/tmp/jetro-coverage` (or wherever you want to keep it):
-133 / 133 practical examples in the book pass against the runtime as of
-the audit. As the engine catches up, entries here drop.
+This page reflects v0.5.5 behavior empirically tested. As the engine
+catches up, entries here drop.
+
+**Open count:** 12 engine/parser fix-list items + 5 design points to
+resolve.
