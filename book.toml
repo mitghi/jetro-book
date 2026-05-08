@@ -8,8 +8,9 @@ description = "Query, transform, and patch JSON with the jetro DSL"
 [output.html]
 default-theme = "light"
 preferred-dark-theme = "navy"
-git-repository-url = "https://github.com/mitghi/jetro"
-edit-url-template = "https://github.com/mitghi/jetro/edit/main/jetro-book/{path}"
+git-repository-url = "https://github.com/mitghi/jetro-book"
+edit-url-template = "https://github.com/mitghi/jetro-book/edit/main/{path}"
+site-url = "/jetro-book/"
 additional-css = ["theme/extra.css"]
 
 [output.html.fold]
