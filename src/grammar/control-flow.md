@@ -70,7 +70,9 @@ match value with {
 | `name` | Any value, bound to `name` |
 | `1..10` | Number ≥ 1 and < 10 |
 | `1..=10` | Number ≥ 1 and ≤ 10 |
-| `{k1: p1, k2: p2}` | Object with these keys, each matching (no shorthand `{k1, k2}` in v0.5) |
+| `{k1: p1, k2: p2}` | Object with these keys, each matching |
+| `{id, name}` | Object shorthand; binds `id` and `name` |
+| `{id, ...*rest}` | Object with rest capture |
 | `[p1, p2]` | Array of length 2, each matching |
 | `[h, ...t]` | Head + tail |
 | `p1 \| p2` | Either pattern (or-pattern) |

@@ -42,10 +42,9 @@ match scrutinee with {
 | `p1 \| p2` | Either |
 | `x: number` | Kind-bind |
 
-> **v0.5 note:** object shorthand `{id, name}` binds each key to a same-name
-> local, and rest-capture is spelled `...*rest` (object) or `...tail`
-> (array): `{id, name, ...*rest}`, `[h, ...tail]`. See
-> [Limitations](../reference/limitations.md) for the canonical pattern grammar.
+Object shorthand `{id, name}` binds each key to a same-name local. Rest
+captures are spelled `...*rest` for objects and `...tail` for arrays:
+`{id, name, ...*rest}`, `[h, ...tail]`.
 
 ## 1. Discriminated union
 
@@ -58,8 +57,8 @@ match $.event with {
 }
 ```
 
-In v0.5 every object pattern key needs an explicit `key: binding` form;
-the bare `{kind: "click", x, y}` shorthand parses-error.
+Literal discriminants and shorthand captures can be mixed, so the click arm
+could also be written as `{kind: "click", x, y}`.
 
 ## 2. Numeric ranges
 
@@ -82,15 +81,11 @@ match $.day with {
 }
 ```
 
-## 4. Rest capture
-
-> ⚠ Not yet supported in v0.5. The `..rest` pattern parse-errors. Bind
-> the keys you care about explicitly and compute `rest` outside the match
-> if needed:
+## 4. Object rest capture
 
 ```jetro
 match $.config with {
-  {host: h, port: p} -> {host: h, port: p, extras: $.config.omit("host", "port")},
+  {host, port, ...*extra} -> {host, port, extra},
   _ -> null
 }
 ```
