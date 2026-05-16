@@ -11,6 +11,11 @@ DOC:    {"users": [{"id": 1, "name": "Ada", "email": "ada@x.com", "active": true
 How to write jetro queries that the planner can run fast, and how to read
 the benchmarks.
 
+Jetro is optimized for cold, file-backed workloads as well as long-lived
+embedded engines. The fastest paths avoid building full JSON trees: they read
+raw bytes, simd-json tape, or borrowed views and materialize only the requested
+result.
+
 ## Mental model
 
 Jetro picks one of six backends per pipeline node. Fast paths share three
@@ -35,6 +40,8 @@ automatically.
 | `$..find(...)`, `$..shape({...})` | bitmap structural index |
 | Single `$.a.b` (path only) | tape-path |
 | Generic expr / lambda body | fast-children |
+| NDJSON direct projection | byte/tape writer |
+| `$.rows().filter(...).take(n)` over a file | demand-aware row stream, sometimes partitioned |
 | Any backend declines | interpreted (universal fallback) |
 
 You don't pick — the planner does. Knowing the table tells you *why* a
@@ -62,6 +69,49 @@ $.users.map(u => u.pick(id, name))
 
 The source decodes only `id` and `name` per row. Other fields stay as raw
 tape tokens.
+
+## NDJSON cold path
+
+In `jetrocli --ndjson`, a row-local expression runs once per line:
+
+```bash
+jetrocli --ndjson -i big.ndjson -e '$.name'
+jetrocli --ndjson -i big.ndjson -e '$.attributes.first().value'
+```
+
+The best row-local shapes are direct byte/tape plans. They can project fields,
+evaluate simple scalar calls, and write compact JSON output without converting
+the whole row to an owned tree.
+
+On the 1 GB `jetrocli` benchmark, expect:
+
+| Shape | Typical expectation vs jaq |
+|---|---|
+| Root field projection, string scalar calls | Tens of times faster; best cases near 100x |
+| Nested first/last field access | Usually tens of times faster |
+| Small array map/projection | Strong, but bounded by output bytes |
+| Filtered nested array reductions | Strong when predicates stay direct |
+| Large derived arrays or fallback lambdas | Slower; more allocation and VM work |
+
+Use `$.rows()` when the query needs whole-file stream state:
+
+```bash
+jetrocli --ndjson -i events.ndjson \
+  -e '$.rows().filter($.active).take(100).map({id: $.id, name: $.name})'
+```
+
+For append-only logs and Kafka compacted-topic dumps, reverse streams can stop
+near the tail:
+
+```bash
+jetrocli --ndjson -i topic.ndjson --payload-after '|' \
+  -e '$.rows().reverse().distinct_by($.id).take(1000)'
+```
+
+The important distinction is how much input must be inspected. `take(10)` and
+tail-first `find(...)` can stop early. Broad `filter`, `distinct_by`, or
+fallback expressions may need to inspect the full file, even though they still
+avoid avoidable materialization.
 
 ## What kills performance
 
