@@ -14,7 +14,7 @@ Add to `Cargo.toml`:
 
 ```toml
 [dependencies]
-jetro = "0.5"
+jetro = "0.5.10"
 ```
 
 The `simd-json` feature is on by default and gives a ~4× cold-start win by
@@ -23,7 +23,7 @@ fall back to the legacy serde-only path:
 
 ```toml
 [dependencies]
-jetro = { version = "0.5", default-features = false }
+jetro = { version = "0.5.10", default-features = false }
 ```
 
 Quick sanity check:
@@ -90,10 +90,18 @@ cd jetrocli && cargo install --path .
 Use it like `jq`:
 
 ```bash
-echo '{"x":[1,2,3]}' | jetrocli '$.x.sum()'
+echo '{"x":[1,2,3]}' | jetrocli -e '$.x.sum()'
 # 6
 
-cat data.json | jetrocli '$.users.filter(@.active).map(@.email)'
+cat data.json | jetrocli -e '$.users.filter(@.active).map(@.email)'
+```
+
+For file-backed NDJSON, add `--ndjson`, `-i`, and `-e`:
+
+```bash
+jetrocli --ndjson -i events.ndjson -e '$.id'
+jetrocli --ndjson -i events.ndjson \
+  -e '$.rows().reverse().distinct_by($.id).take(100)'
 ```
 
 ## Building from source

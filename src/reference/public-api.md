@@ -31,9 +31,10 @@ assert_eq!(v, serde_json::json!(6));
 | `j.collect(query)` | `Result<serde_json::Value, EvalError>` |
 | `j.collect_typed::<T>(query)` | `Result<T, EvalError>` (deserialize directly) |
 
-`Jetro` uses a thread-local VM with a path cache. Cheap to construct;
-prefer to drop it when you move to a new document so the cache key stays
-valid.
+`Jetro` owns its per-document lazy state: raw bytes, tape/value caches, object
+vector promotion cache, and an instance VM used for fallback execution. It is
+cheap to construct for a document and can answer many queries over the same
+bytes without reparsing.
 
 ## `JetroEngine` — long-lived multi-doc handle
 
@@ -57,9 +58,30 @@ for doc_bytes in inputs {
 | `eng.collect(&doc, q)` | `&Val` | Document already in `Val` form |
 | `eng.collect_value(serde_value, q)` | `serde_json::Value` | Round-trips |
 | `eng.collect_bytes(&[u8], q)` | Raw bytes | Lazy parse |
+| `eng.run_ndjson(...)` | Reader, query, writer | Row-local NDJSON execution |
+| `eng.run_ndjson_file(...)` | File path, query, writer | File-backed NDJSON, including `$.rows()` stream mode |
+| `eng.run_ndjson_source(...)` | Reader or file source | Dispatches reader/file behavior explicitly |
 
 Returns `Result<serde_json::Value, JetroEngineError>` — a wider error type
 that may also wrap JSON-parse errors.
+
+### NDJSON options
+
+NDJSON helpers accept `NdjsonOptions` variants for file and reader workloads:
+
+| Option | Effect |
+|---|---|
+| `row_frame` | Plain JSON lines or delimited payloads such as `key|payload` |
+| `null_output` | Skip or emit expression results that are JSON `null` |
+| `parallelism` | Automatic or disabled partition execution for eligible file streams |
+| `parallel_min_bytes` | Minimum file size before parallel partitions are considered |
+| `max_line_len` | Per-line safety cap |
+| `reverse_chunk_size` | Reverse file-reader chunk size |
+
+Expression-level `$.rows()` switches NDJSON from row-local execution to a
+whole-source stream plan. On files, `$.rows().reverse()` uses reverse file
+traversal; reader-backed reverse streams return a clear unsupported-source
+error.
 
 ### Configuration
 
@@ -96,7 +118,7 @@ To disable simd-json:
 
 ```toml
 [dependencies]
-jetro = { version = "0.5", default-features = false }
+jetro = { version = "0.5.10", default-features = false }
 ```
 
 ## Python binding
@@ -114,18 +136,20 @@ result = jetro.collect({"x": [1,2,3]}, "$.x.sum()")
 ## CLI
 
 ```bash
-jetrocli '$.x.sum()' < input.json
+jetrocli -e '$.x.sum()' < input.json
+jetrocli --ndjson -i events.ndjson -e '$.rows().take(10)'
 ```
 
-The CLI is a thin wrapper around `Jetro::from_bytes`.
+The CLI is a thin wrapper around the Rust APIs, with `-e` selecting
+non-interactive expression execution.
 
 ## Threading
 
-- `Jetro` is `Send + Sync` *for read-only queries* — multiple threads can
-  share a `Jetro` and run different queries concurrently.
+- `Jetro` is intended as a document handle. Prefer one handle per document
+  owner; use `JetroEngine` for shared multi-document workloads.
 - `JetroEngine` is `Send + Sync` and intended for shared-engine workloads.
-- The VM path-cache is thread-local; cross-thread access goes through
-  separate caches.
+- The engine owns shared plan/VM caches so repeated queries over many
+  documents avoid parse/lower/compile cost.
 
 ## Stability
 
