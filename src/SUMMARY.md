@@ -29,6 +29,7 @@
   - [String Transforms](./builtins/string.md)
   - [String Search and Regex](./builtins/string-search.md)
   - [Conversion and Parsing](./builtins/conversion.md)
+  - [Row Stream Source](./builtins/rows.md)
   - [Streaming One-to-One](./builtins/streaming.md)
   - [Filtering](./builtins/filtering.md)
   - [Expanding Sequences](./builtins/expanding.md)
