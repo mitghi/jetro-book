@@ -60,7 +60,7 @@ cross-linked.
 
 ## Sharp edges
 
-A small set of v0.5 design choices is documented in
+A small set of 0.5-line design choices is documented in
 [Known Limitations](../reference/limitations.md): `replace` is
 single-occurrence (use `replace_all` for substitute-every), there is no
 `in` operator (use `xs has v`), and `rec(fn)` caps at 10 000 iterations

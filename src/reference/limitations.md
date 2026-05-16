@@ -123,5 +123,5 @@ legitimately huge rows.
 
 ## Version Note
 
-This page reflects jetro 0.5.10. If a page elsewhere still says a 0.5.5 audit
-item is broken, prefer this page and the current builtin reference.
+This page reflects jetro 0.5.10. If a page elsewhere still carries an older
+audit note, prefer this page and the current builtin reference.

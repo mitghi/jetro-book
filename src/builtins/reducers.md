@@ -36,7 +36,7 @@ This is the cheapest reducer — the source skips deserialisation entirely.
 
 ## `approx_count_distinct`
 
-> ⚠ **Not yet supported in v0.5** — runtime returns `"ApproxCountDistinct:
+> ⚠ **Not yet supported in 0.5.10** — runtime returns `"ApproxCountDistinct:
 > builtin unsupported"`. Spec exists; HyperLogLog backend pending.
 
 - **Signature (planned):** `Array<Any> -> Number`
@@ -51,7 +51,7 @@ For now, use `.unique().count()` for exact distinct count.
 
 ```jetro
 QUERY:  $.users.any(@.role == "admin")
-OUT:    false
+OUT:    true
 ```
 
 ## `all`
@@ -120,7 +120,7 @@ DOC:    {"books":[
 
 # Total revenue across all books
 QUERY:  $.books.map(@.price).sum()
-OUT:    0
+OUT:    55
 
 # Mean price
 QUERY:  $.books.map(@.price).avg()

@@ -62,9 +62,9 @@ Ready? Start with the [Quick Tour](./quick-tour.md), or jump to the
 [Builtin Reference](./builtins/overview.md) if you already know jetro and need a
 specific method.
 
-> **A few v0.5 sharp edges worth noting up front.** This book documents
+> **A few 0.5.10 sharp edges worth noting up front.** This book documents
 > jetro's stable semantics; the behaviours listed below are intentional
-> design choices for v0.5. See
+> design choices for the 0.5 line. See
 > [Known Limitations](./reference/limitations.md) for the canonical fix-list.
 > - `replace(needle, with)` replaces **only the first** occurrence
 >   (JavaScript-style); use `replace_all` for substitute-every behaviour.

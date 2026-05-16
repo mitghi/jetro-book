@@ -63,7 +63,7 @@ $.users
 Pipe to a file from the CLI:
 
 ```bash
-jetrocli '$.users.filter(@.active).pick(id,name).to_csv()' < users.json > out.csv
+jetrocli -e '$.users.filter(@.active).pick(id,name).to_csv()' < users.json > out.csv
 ```
 
 ## Limitations
@@ -83,8 +83,7 @@ jetrocli '$.users.filter(@.active).pick(id,name).to_csv()' < users.json > out.cs
 # Active-user export
 $.users.filter(@.active).map(u => u.pick(id, name, email)).sort(u => u.id).to_csv()
 
-# Daily sales report (use e[0]/e[1] indexing — array-pattern destructure
-# inside a lambda doesn't parse in v0.5)
+# Daily sales report
 $.sales.group_by(s => s.day).entries().map(e => {
   day:   e[0],
   total: e[1].map(@.amount).sum(),

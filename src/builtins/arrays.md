@@ -95,7 +95,7 @@ Useful for building multi-shape projections without repeating subexpressions.
 
 ## `zip_shape(arrays)`
 
-> ⚠ **Not yet supported in v0.5** — runtime returns `"ZipShape: builtin
+> ⚠ **Not yet supported in 0.5.10** — runtime returns `"ZipShape: builtin
 > unsupported"`. Spec exists; runtime hookup pending.
 
 - **Signature (planned):** `Object<KeyString, Array<A>> -> Array<Object>`

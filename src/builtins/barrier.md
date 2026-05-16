@@ -86,7 +86,7 @@ OUT:    {"1":{"id":1,"name":"Ada",...},"2":{"id":2,"name":"Bob",...},"3":{"id":3
 
 ### `group_shape`
 
-> ⚠ **Not yet supported in v0.5** — runtime returns `"GroupShape: builtin
+> ⚠ **Not yet supported in 0.5.10** — runtime returns `"GroupShape: builtin
 > unsupported"`. Tracked for a future release.
 
 - **Signature:** `Array<Object> -> Array<Object>`

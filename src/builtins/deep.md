@@ -66,10 +66,9 @@ node's identity (e.g. "stop at leaves of kind X").
 
 ## `rec(pattern, fn)`
 
-> ⚠ **Unstable in v0.5** — observed runtime error `"rec: exceeded 10000
-> iterations without reaching fixpoint"` even on simple inputs. Spec exists
-> but the fixpoint loop is buggy. Avoid in production until fixed; track
-> migration progress in the issue tracker.
+> ⚠ **Limited in 0.5.10** — recursive rewrites are guarded with a 10 000
+> iteration cap. Prefer `walk` or `walk_pre` for one-pass document traversal,
+> and keep `rec` for bounded fixpoint-style rewrites.
 
 - **Signature (planned):** `Any, Pattern, (Any -> Any) -> Any`
 - **Behavior (planned):** Match-and-rewrite. Recursively walks; replaces
