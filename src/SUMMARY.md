@@ -2,7 +2,7 @@
 
 [Introduction](./introduction.md)
 [Installation](./installation.md)
-[A 5-Minute Tour](./quick-tour.md)
+[A 20-Minute Tour](./quick-tour.md)
 
 # Language Reference
 
