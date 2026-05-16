@@ -61,7 +61,7 @@ QUERY:  $.books.unique_by(@.author)
 
 ```jetro
 QUERY:  $.books.group_by(@.author)
-OUT:    {"null":[null]}
+OUT:    {"Herbert":[{"title":"Dune",...}],"Asimov":[{"title":"Foundation",...}],...}
 ```
 
 ### `count_by(key)`
@@ -71,7 +71,7 @@ OUT:    {"null":[null]}
 
 ```jetro
 QUERY:  $.books.count_by(@.author)
-OUT:    [null]
+OUT:    {"Herbert":1,"Asimov":1,"Simmons":1,"Stephenson":1}
 ```
 
 ### `index_by(key)`
@@ -81,7 +81,7 @@ OUT:    [null]
 
 ```jetro
 QUERY:  $.users.index_by(@.id)
-OUT:    [null]
+OUT:    {"1":{"id":1,"name":"Ada",...},"2":{"id":2,"name":"Bob",...},"3":{"id":3,"name":"Cy",...}}
 ```
 
 ### `group_shape`
@@ -96,13 +96,13 @@ OUT:    [null]
 
 ### `partition(pred)`
 
-> ⚠ **Not yet supported in v0.5** for chained / pipeline use. The `apply_*`
-> trait dispatch isn't wired through the streaming planner; calling it inside
-> a chain like `$.store.books.partition(@.x)` is unreliable. Spec exists but
-> output shape and execution path are subject to change.
+- **Signature:** `Array<A> -> [Array<A>, Array<A>]`
+- **Behavior:** Split into `[matching, non_matching]`.
 
-- **Signature (planned):** `Array<A> -> [Array<A>, Array<A>]`
-- **Behavior (planned):** `[matching, non-matching]`.
+```jetro
+QUERY:  $.books.partition(@.year < 1970)
+OUT:    [[{"title":"Dune",...},{"title":"Foundation",...}],[{"title":"Hyperion",...},{"title":"Snow Crash",...}]]
+```
 
 ## Window / chunk
 
@@ -144,15 +144,16 @@ The leading `n-1` positions emit `null` until the window fills.
 
 ## `accumulate(init, fn)`
 
-> ⚠ **Not yet supported in v0.5** — runtime returns `"accumulate: builtin
-> not migrated to builtins.rs AST adapter"`. Spec exists; runtime hookup
-> pending.
+- **Signature:** `Array<A> -> Array<B>` with `fn: (B, A) -> B`
+- **Behavior:** Streaming fold producing intermediate states.
 
-- **Signature (planned):** `Array<A> -> Array<B>` (with `fn: (B, A) -> B`, `init: B`)
-- **Behavior (planned):** Streaming fold producing intermediate states.
+```jetro
+QUERY:  [1,2,3,4].accumulate(0, (a, x) => a + x)
+OUT:    [1,3,6,10]
 
-For now, use `cummax` / `cummin` for running min/max, or build the fold
-with a `let` + recursive helper if absolutely needed.
+QUERY:  [1,2,3,4].accumulate((a, x) => a + x)
+OUT:    [1,3,6,10]
+```
 
 ## When to barrier
 
@@ -181,26 +182,26 @@ DOC:    {"books":[
 
 # Sort by year ascending
 QUERY:  $.books.sort(b => b.year).map(@.title)
-OUT:    [null]
+OUT:    ["Foundation","Dune","Hyperion","Snow Crash"]
 
 # Sort by price descending (negate the key)
 QUERY:  $.books.sort(b => -b.price).map(@.title)
-OUT:    [null]
+OUT:    ["Hyperion","Dune","Snow Crash","Foundation"]
 
 # Distinct tags across books
 QUERY:  $.books.flat_map(@.tags).unique()
 
 # How many distinct authors
 QUERY:  $.books.unique_by(b => b.author).count()
-OUT:    1
+OUT:    4
 
 # Group by author
 QUERY:  $.books.group_by(b => b.author)
-OUT:    {"null":[null]}
+OUT:    {"Herbert":[{"title":"Dune",...}],"Asimov":[{"title":"Foundation",...}],...}
 
 # Histogram of authors (prefer count_by — no buffering of bucket payloads)
 QUERY:  $.books.count_by(b => b.author)
-OUT:    [null]
+OUT:    {"Herbert":1,"Asimov":1,"Simmons":1,"Stephenson":1}
 
 # Build a quick lookup table
 QUERY:  $.users.index_by(u => u.id)
