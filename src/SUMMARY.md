@@ -48,6 +48,7 @@
 
 - [Chained Pipelines](./recipes/chained.md)
 - [Pattern Match Cookbook](./recipes/pattern-match.md)
+- [Kafka Compacted Topic Dumps](./recipes/kafka-compacted-topic.md)
 - [Write Fusion](./recipes/write-fusion.md)
 
 # Guides
