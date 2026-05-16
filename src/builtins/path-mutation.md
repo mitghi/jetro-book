@@ -16,13 +16,8 @@ This chapter documents the **method-call** versions.
 
 ## `get_path(path)`
 
-> ⚠ **v0.5 quirk:** only resolves a single key — `get_path("a/b/c")` returns
-> null even when `$.a.b.c` exists. Use direct path navigation
-> (`$.a.b.c`) when the path is statically known. For dynamic paths, walk
-> manually with `let` + chained `[expr]`.
-
-- **Signature (intended):** `Any, String -> Any | null`
-- **Behavior (intended):** Read a value at a slash-separated path.
+- **Signature:** `Any, String -> Any | null`
+- **Behavior:** Read a value at a slash- or dot-separated path.
 
 ```jetro
 DOC:    {"user": {"profile": {"name": "Ada"}}}
@@ -64,12 +59,11 @@ QUERY:  $.del_paths(["user/secret", "user/temp", "session/csrf"])
 ## `has_path(path)`
 
 - **Signature:** `Any, String -> Bool`
-- **Behavior:** True if a value exists at `path`. Distinguishes "missing" from
-  "explicit null":
+- **Behavior:** True if a path exists. A present `null` is still present:
 
 ```jetro
 DOC:    {"a": null}
-QUERY:  $.has_path("a")     OUT: false
+QUERY:  $.has_path("a")     OUT: true
 QUERY:  $.has_path("b")     OUT: false
 ```
 
@@ -229,7 +223,7 @@ the planner can use literal field names.
 ## Practical examples
 
 ```jetro
-# Single-key write (preferred over set_path for v0.5)
+# Single-key write
 $.user.name.set("Ada Lovelace")                  # chain-write
 
 # Set a field deep
@@ -251,4 +245,11 @@ patch $ {
 
 # Flat-key patches
 $.patch_set.flatten_keys().entries().map(([k,v]) => $.set_path(k, v))
+
+# Batched functional update
+$.books[*].update({
+  reviewed: true,
+  tags: tags.append("classic") when year < 1970,
+  tmp: DELETE
+})
 ```
