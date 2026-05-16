@@ -173,26 +173,108 @@ QUERY:  $.users.map(u => u.omit("password", "ssn", "token"))
 ## 14. Delta + cumulative sum
 
 ```jetro
-QUERY:  $.daily.pairwise().map(([a, b]) => b.value - a.value)
+DOC:    {"daily":[{"value":10},{"value":15},{"value":12},{"value":20}]}
+
+QUERY:  $.daily
+          .pairwise()
+          .map(([a, b]) => b.value - a.value)
+
+OUT:    [5,-3,8]
 ```
 
-> Cumulative-sum form (`.accumulate(0, (a, x) => a + x)`) isn't yet wired up
-> in v0.5 — see the [Limitations](../reference/limitations.md) page. Until
-> then, `cummax` / `cummin` cover running min/max; full fold needs a host
-> loop.
-
-## 15. Migrate a document shape
-
-> ⚠ `rec` is unstable in v0.5 (fixpoint loop bug). For now, prefer
-> `walk` / `walk_pre` with a manual shape check, or do the rewrite host-side.
+For a running total, use `accumulate`:
 
 ```jetro
-QUERY (planned, currently broken):
-  $.rec({type: "v1"}, doc =>
-    doc.merge({type: "v2"})
-       .rename({old_field: "new_field"})
-       .omit("legacy_blob"))
+DOC:    {"amounts":[10,12,9]}
+
+QUERY:  $.amounts.accumulate(0, (total, x) => total + x)
+
+OUT:    [10,22,31]
 ```
 
-`rec` walks the document, finds every node matching the shape, and rewrites
-in place.
+## 15. Classify rows with `match`
+
+```jetro
+DOC:    {"books": [
+  {"title":"Dune","year":1965,"tags":["sf"]},
+  {"title":"Snow Crash","year":1992,"tags":["sf","cyberpunk"]},
+  {"title":"Foundation","year":1951,"tags":["sf","hugo"]}
+]}
+
+QUERY:  $.books
+          .map(book => {
+            title: book.title,
+            era: match book with {
+              {year: y when y < 1970} -> f"classic {y}",
+              {year: y} -> f"modern {y}",
+              _ -> "unknown"
+            },
+            tag_count: book.tags.count()
+          })
+
+OUT:    [
+  {"title":"Dune","era":"classic 1965","tag_count":1},
+  {"title":"Snow Crash","era":"modern 1992","tag_count":2},
+  {"title":"Foundation","era":"classic 1951","tag_count":2}
+]
+```
+
+## 16. Latest active rows from NDJSON
+
+```bash
+jetrocli --ndjson -i users.topic --payload-after '|' -e '
+  $.rows()
+    .reverse()
+    .distinct_by(@.id)
+    .filter(@.active)
+    .take(100)
+    .map({
+      id: $.id,
+      name: $.profile.name,
+      city: $.profile.address.city
+    })
+'
+```
+
+On a compacted Kafka-style file, reverse rows make the newest record for each
+key appear first. `distinct_by(@.id)` keeps that first row and discards older
+duplicates as soon as the key has been seen.
+
+## 17. Patch several paths in one pass
+
+```jetro
+DOC:    {"books":[
+  {"title":"Dune","year":1965,"tags":["sf"],"tmp":true},
+  {"title":"Snow Crash","year":1992,"tags":["sf"],"tmp":true}
+]}
+
+QUERY:  $.update({
+          books[*].tags: @ + ["catalog"],
+          books[*].reviewed: true,
+          books[*].tmp: DELETE
+        })
+
+OUT:    {"books":[
+  {"title":"Dune","year":1965,"tags":["sf","catalog"],"reviewed":true},
+  {"title":"Snow Crash","year":1992,"tags":["sf","catalog"],"reviewed":true}
+]}
+```
+
+The planner can batch compatible rooted writes so shared ancestors are cloned
+once and all writes under that prefix are applied together.
+
+## 18. Migrate a document shape
+
+Use `walk` when every nested object with a matching shape must be rewritten:
+
+```jetro
+QUERY:
+  $.walk(node =>
+    node.merge({type: "v2"})
+        .rename({old_field: "new_field"})
+        .omit("legacy_blob")
+    if node is object and node.type == "v1" else node)
+```
+
+For query-local rewrites on known paths, prefer `update(...)`; for broad shape
+migration, `walk` makes the traversal explicit.
