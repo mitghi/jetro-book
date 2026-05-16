@@ -52,6 +52,7 @@
 # Guides
 
 - [jq vs jetro Cheatsheet](./guides/jq-cheatsheet.md)
+- [NDJSON and Whole-Stream Queries](./guides/ndjson.md)
 - [Performance Guide](./guides/performance.md)
 
 # Appendix
