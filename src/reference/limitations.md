@@ -1,169 +1,127 @@
-# Known Limitations and Behavior Surprises (v0.5)
+# Known Limitations and Behavior Notes (0.5.10)
 
-Empirically validated against jetro 0.5.5. This page is the canonical
-fix-list — every entry is a known gap between intended and actual behavior.
-Use it as a backlog: items here should drop as the runtime catches up.
+This page documents current boundaries and intentional language choices for
+jetro 0.5.10. It is not a bug graveyard: fixed audit items have moved back
+into their normal reference pages.
 
-## v0.5.5 — fixed in this release
+## Current Boundaries
 
-The 14 audit-surfaced bugs were addressed plus three follow-up sweeps:
+### `$.rows()` is a root stream source
 
-- ✅ `[*]` wildcard parses (mid-chain expands to `.map(@ + rest)`).
-- ✅ `[a:b:c]` and `[::n]` (incl. `[::-1]` reverse) — Python-style step slicing.
-- ✅ Lambda array-pattern destructure `([k, v]) => body` and rest form
-  `([h, ...tail]) => body`.
-- ✅ Object patterns in `match` accept reserved words as keys (`{kind: "click"}`).
-- ✅ Object pattern shorthand `{id, name}` ≡ `{id: id, name: name}` in `match`.
-- ✅ `Val::StrSlice + Val::Str` → string concat. Path-rooted concat works.
-- ✅ `entries()`/`keys()`/`values()` no longer triple-wrap their array result.
-- ✅ `parse_int(radix)` — base-aware integer parsing with prefix stripping.
-- ✅ `to_csv(headers)` / `to_tsv(headers)` — explicit header column ordering.
-- ✅ `accumulate(init, fn)` and `accumulate(fn)` — both forms.
-- ✅ `partition(pred)` — chained and standalone.
-- ✅ `approx_count_distinct()` — HyperLogLog.
-- ✅ `missing("k1", "k2", ...)` — returns missing-keys array.
-- ✅ `get_path("a/b/c")` and `get_path("a.b.c")` — multi-segment paths.
-- ✅ `dedent()` — common-prefix removal.
-- ✅ `remove(pred)` — predicate evaluated.
-- ✅ `enumerate()` — survives composition with `map` / `filter`.
-- ✅ `pairwise()` — works on path sources.
-- ✅ `.has(v)` returns boolean.
-- ✅ `rec(fn)` fixpoint via deep structural equality.
-- ✅ `rec(fn, cond)` — iterate while `cond(@)` holds, capped at 10 000 iters.
-- ✅ `update(path, fn)` and functional `.update({...})` — see [Path Mutation](../builtins/path-mutation.md#update).
-- ✅ Filtered wildcard `[* if pred]`.
-- ✅ Wildcard chain modify `$.xs[*].field.modify(@)`.
-- ✅ Object literal as method receiver `{a: 1}.keys()` and `({a: 1}).keys()`.
-- ✅ Regex escape: `"\d"` and `"\\d"` both parse as digit class.
-- ✅ Path-call scalar unwrap: `$.s.upper()` → `"HELLO"` (was `["HELLO"]`).
-  Scalar `OneToOne` builtins on path receivers dispatch directly via
-  `apply_one`; opt out per-builtin with `BuiltinSpec::never_unwrap()`.
-- ✅ `to_json` on array path: `$.users.to_json()` → single JSON document
-  (was per-element JSON strings).
-- ✅ `zip_shape({a, b})` object-shape arg form.
-- ✅ `group_shape(key)` 1-arg key projection (lambda or bare ident).
-- ✅ `indent("> ")` accepts a string prefix in addition to integer count.
-- ✅ Bare-path `.field` inside method args (`$.users.filter(.active)` ≡ `(@.active)`).
-- ✅ Double-quoted string escape `"{\"a\":1}".from_json()` parses.
+`$.rows()` starts a source-level stream. In NDJSON mode it means "all rows in
+the file or reader"; in normal JSON mode it means "the top-level array
+elements" or one row for an object/scalar.
 
-Items below are still outstanding.
-
-Organized into:
-
-1. [Open engine items](#1-open-engine-items)
-2. [Design choices](#2-design-choices) — intentional, won't change
-
----
-
-## 1. Open engine items
-
-### 1.1 `rec()` no-arg
-
-`rec` requires a step expression — there is no defined no-arg semantic.
-The closest match is `walk(fn)` for traversal-style transforms or
-`rec(fn)` for fixpoint iteration. May be retired or aliased to a default
-walker in a later release.
-
-### 1.2 `rec(fn)` runaway iteration cap
-
-Calls to `rec(fn)` where `fn` is non-idempotent and never reaches a
-deep-structural fixed point are bounded at 10 000 iterations and then
-error. The new error message names the cap and recommends `rec(fn, cond)`
-for explicit bounding. No guard short of analytic decidability prevents
-the worst case; document the cap and surface it loudly.
-
----
-
-## 2. Design choices
-
-### 2.1 No `in` operator
-
-`in` would be ambiguous with `let X = Y in Z` and `for x in xs`. Use the
-postfix `has` operator or `.includes(v)` method:
+Supported:
 
 ```jetro
-xs has "x"             # ✓ operator
-xs.includes("x")       # ✓ method
-"x" in xs              # ✗ parse error (intentional)
+$.rows().filter($.active).take(10)
+$.rows().reverse().distinct_by($.id).take(100)
 ```
 
-### 2.2 `replace` is single-occurrence
-
-`.replace(needle, with)` replaces only the first match — JavaScript-style.
-Use `.replace_all` for substitute-every behaviour:
+Not yet supported:
 
 ```jetro
-"hello hello".replace("hello", "hi")          # → "hi hello"
-"hello hello".replace_all("hello", "hi")      # → "hi hi"
+$.books.rows().take(10)
 ```
 
-### 2.3 Comments
+Nested stream sources need a separate design because they mix document-local
+arrays with source-level IO and reverse traversal.
 
-There are no comments inside a query. Strip client-side.
+### Reader-backed reverse NDJSON is unsupported
 
-### 2.4 `[expr]` vs `{expr}`
+`$.rows().reverse()` needs a seekable file-backed source. It works with
+`run_ndjson_file`, `NdjsonSource::file`, and `jetrocli --ndjson -i file`.
+Reader-backed NDJSON sources return a clear error instead of materializing the
+whole stream implicitly.
 
-Inline filter is `{predicate}`. `[expr]` is index/slice.
+### Row-stream operators are deliberately small
+
+Current `$.rows()` stream mode supports the operators needed for retained-row
+workloads:
+
+- `reverse()`
+- `filter(pred)`
+- `find(pred)` / `find_first(pred)` / `find_one(pred)`
+- `distinct_by(key)`
+- `take(n)` / `first()`
+- `map(expr)`
+
+Operators such as `sort`, `group_by`, windows, joins, and multi-source
+streaming are normal array/document operators, but not yet source-level
+`$.rows()` stages.
+
+### Parallel NDJSON is selective
+
+File-backed row-stream partitioning is automatic only for plans where it is
+expected to help. For example, selective `filter(...).take(n)` can benefit
+from partitioned scanning. Plain `map(...).take(n)` stays sequential because
+it can stop after the first `n` rows without scanning unrelated partitions.
+
+### Public observability is still minimal
+
+The engine records internal rows-stream stats for tests and future explain
+output, but 0.5.10 does not expose a stable public `explain()` API yet.
+
+## Intentional Language Choices
+
+### No `in` operator
+
+`in` would conflict with `let x = y in z` and `for x in xs`. Use `has`,
+`includes`, or `has_key`:
 
 ```jetro
-$.xs{@.active}        # ✓ inline filter
-$.xs[@.active]        # ✗ index expression
+$.tags.includes("urgent")
+$.user.has_key("email")
+$.users has {id: 1}
 ```
 
----
+### `has`, `has_key`, `includes`, and `has_path` differ
 
-## 3. Argument / receiver shape rules
-
-### 3.1 Methods accepting lambda forms
-
-| Method | Working forms |
+| Form | Meaning |
 |---|---|
-| `filter`, `find`, `find_all`, `find_first`, `find_one`, `find_index`, `indices_where`, `any`, `all`, `take_while`, `drop_while`, `remove` | `(@.x op v)`, `(.x op v)`, `(b => b.x op v)`, `(lambda b: ...)` |
-| `map`, `flat_map`, `transform_keys`, `transform_values`, `filter_keys`, `filter_values` | Same |
-| `sort`, `unique_by`, `group_by`, `count_by`, `index_by`, `max_by`, `min_by` | Same; `(b => b.x)` named lambda preferred for readability |
+| `obj.has_key("k")` | Object key exists |
+| `obj.has("k")` | Key/index style existence helper |
+| `xs.includes(v)` | Value membership |
+| `doc.has_path("a.b")` | Path exists in a nested structure |
+| `x has y` | Membership/containment operator sugar |
+
+Use `has_key` when you specifically want an object-key check.
+
+### `replace` is single-occurrence
+
+`.replace(needle, with)` replaces only the first match. Use `replace_all`
+for every occurrence:
 
 ```jetro
-$.books.sort(b => b.year)             # named lambda
-$.books.sort(@.year)                  # @-form
-$.books.sort(.year)                   # bare-path sugar (≡ @-form)
+"hello hello".replace("hello", "hi")      # "hi hello"
+"hello hello".replace_all("hello", "hi")  # "hi hi"
 ```
 
-### 3.2 Methods that take bare identifiers (no `@`)
+### Comments are outside the query language
 
-| Method | Form |
-|---|---|
-| `pick(field, alias: src, ...)` | Bare identifiers. **Not** `@.field`. |
-| `omit(field, ...)` | Same |
-| `rename({old: new, ...})` | Object map |
-| `missing("k1", "k2", ...)` | String literals |
+Jetro expressions do not contain comments. Keep query comments in the host
+language, shell script, or documentation.
+
+## Safety Limits
+
+### `rec(fn)` has an iteration cap
+
+`rec(fn)` runs until a deep structural fixpoint. If the function never
+converges, jetro stops at the iteration cap and reports an error. Prefer
+`rec(fn, cond)` when the loop has an explicit bound.
 
 ```jetro
-$.user.pick(id, name)                 # ✓
-$.user.pick(@.id, @.name)             # ✗ parse error
-$.user.pick(uid: id)                  # ✓ alias
+$.state.rec(step, done)
 ```
 
-### 3.3 Multi-arg lambdas
+### NDJSON line size is bounded
 
-Two-arg lambdas use parens:
+NDJSON readers enforce a per-line byte cap to avoid unbounded memory use on
+malformed input. Tune it with `NdjsonOptions` or the CLI flag when processing
+legitimately huge rows.
 
-```jetro
-$.orders.equi_join($.customers, "cid", "id", (o, c) => {buyer: c.name})
-$.xs.accumulate(0, (a, b) => a + b)
-```
+## Version Note
 
-Single-arg array destructure (with optional rest) is supported:
-
-```jetro
-$.entries.map(([k, v]) => {k, v})         # ✓
-$.rows.map(([h, ...tail]) => tail)        # ✓ rest binding
-```
-
----
-
-## Versions
-
-This page reflects v0.5.5 behavior empirically tested. As the engine
-catches up, entries here drop.
-
-**Open count:** 2 engine items + 4 design choices documented.
+This page reflects jetro 0.5.10. If a page elsewhere still says a 0.5.5 audit
+item is broken, prefer this page and the current builtin reference.
