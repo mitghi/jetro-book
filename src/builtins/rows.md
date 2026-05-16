@@ -13,15 +13,16 @@ querying one document value, it exposes a stream of rows.
 
 ## Normal JSON
 
-On a normal JSON document, `$.rows()` streams the top-level value:
+On a normal JSON document, `$.rows()` treats the document itself as one row:
 
 ```jetro
-DOC:    [{"id":1,"name":"Ada"},{"id":2,"name":"Bob"},{"id":1,"name":"Ada v2"}]
-QUERY:  $.rows().distinct_by($.id).map({id: $.id, name: $.name})
-OUT:    [{"id":1,"name":"Ada"},{"id":2,"name":"Bob"}]
+DOC:    {"id":1,"name":"Ada"}
+QUERY:  $.rows().map({id: $.id, name: $.name})
+OUT:    [{"id":1,"name":"Ada"}]
 ```
 
-Top-level objects and scalars are treated as a single row.
+Top-level arrays are also one document row in normal JSON mode. Use normal
+array methods directly when the input document is an array.
 
 ## NDJSON
 

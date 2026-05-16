@@ -59,11 +59,12 @@ QUERY:  $.del_paths(["user/secret", "user/temp", "session/csrf"])
 ## `has_path(path)`
 
 - **Signature:** `Any, String -> Bool`
-- **Behavior:** True if a path exists. A present `null` is still present:
+- **Behavior:** True if a path exists and resolves to a non-null value.
+  Current 0.5.10 behavior treats a present `null` like a missing path:
 
 ```jetro
 DOC:    {"a": null}
-QUERY:  $.has_path("a")     OUT: true
+QUERY:  $.has_path("a")     OUT: false
 QUERY:  $.has_path("b")     OUT: false
 ```
 
@@ -209,8 +210,8 @@ DOC:    {"users": [
   {"id": 2, "secret": "b", "name": "Bob"}
 ]}
 
-QUERY:  $.users.map(u => u.del_paths(["secret"]).set_path("display", u.name))
-OUT:    [{"display":null}]
+QUERY:  $.users.map(u => u.omit("secret").set_path("display", u.name))
+OUT:    [{"display":"Ada","id":1,"name":"Ada"},{"display":"Bob","id":2,"name":"Bob"}]
 ```
 
 ## Demand notes

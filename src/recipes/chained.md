@@ -205,7 +205,7 @@ QUERY:  $.books
           .map(book => {
             title: book.title,
             era: match book with {
-              {year: y when y < 1970} -> f"classic {y}",
+              {year: y} when y < 1970 -> f"classic {y}",
               {year: y} -> f"modern {y}",
               _ -> "unknown"
             },
@@ -249,7 +249,7 @@ DOC:    {"books":[
 ]}
 
 QUERY:  $.update({
-          books[*].tags: @ + ["catalog"],
+          books[*].tags: @.append("catalog"),
           books[*].reviewed: true,
           books[*].tmp: DELETE
         })

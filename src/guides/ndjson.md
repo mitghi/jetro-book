@@ -137,13 +137,15 @@ single-field projection.
 
 ## Normal JSON Documents
 
-`$.rows()` is not NDJSON-only. On a normal JSON array it streams the array
-elements:
+`$.rows()` is not NDJSON-only. On a normal JSON document, it treats the
+document itself as one row:
 
 ```jetro
-DOC:    [{"id":1},{"id":2},{"id":1}]
-QUERY:  $.rows().distinct_by($.id).map($.id)
-OUT:    [1,2]
+DOC:    {"id":1}
+QUERY:  $.rows().map($.id)
+OUT:    [1]
 ```
 
-On an object or scalar document, `$.rows()` treats the document as one row.
+Top-level arrays are one document row in normal JSON mode; use normal array
+methods directly when the input document is an array. In NDJSON mode,
+`$.rows()` means the whole input stream.

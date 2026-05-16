@@ -139,7 +139,7 @@ QUERY:  $.books.any(@.tags? and @.tags.includes("cyberpunk"))
 
 # Count books published before 1970
 QUERY:  $.books.filter(@.year < 1970).count()
-OUT:    0
+OUT:    2
 
 # Position of the first 1990s book
 QUERY:  $.books.find_index(@.year >= 1990)
@@ -147,5 +147,5 @@ OUT:    3
 
 # All published years where price > 12
 QUERY:  $.books.indices_where(@.price > 12)
-OUT:    []
+OUT:    [0,2]
 ```
