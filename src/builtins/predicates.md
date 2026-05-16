@@ -34,18 +34,30 @@ QUERY:  [1,2,3].has(5)     OUT: false
 The `has` *operator* (`x has y`) is sugar for `x.includes(y)` — distinct
 from this method.
 
+## `has_key(key)`
+
+- **Signature:** `Object, String -> Bool`
+- **Behavior:** True if the receiver is an object and the key exists.
+
+```jetro
+QUERY:  {"a":1,"b":null}.has_key("a")     OUT: true
+QUERY:  {"a":1,"b":null}.has_key("b")     OUT: true
+QUERY:  {"a":1}.has_key("z")              OUT: false
+QUERY:  [1,2,3].has_key("0")              OUT: false
+```
+
+Use `has_key` when you specifically mean object-key existence. It is narrower
+than `has` and easier for direct object-key checks to optimize.
+
 ## `missing(...keys)`
 
-> ⚠ **Broken in v0.5** — empirically returns `false` instead of the array
-> of missing keys. Compute manually until fixed:
->
-> ```text
-> ["host", "port", "user"].filter(k => not $.config.has_path(k))
-> ```
+- **Signature:** `Object, ...String -> Array<String>`
+- **Behavior:** Return the subset of provided keys that are not present.
 
-- **Signature (intended):** `Object, ...String -> Array<String>`
-- **Behavior (intended):** Return the subset of provided keys that are *not*
-  present.
+```jetro
+QUERY:  {"host":"localhost","port":5432}.missing("host", "port", "user")
+OUT:    ["user"]
+```
 
 ## `includes(value)` *(alias `contains`)*
 
@@ -83,8 +95,11 @@ OUT:    [1, 3]
 
 | Pattern | Returns |
 |---|---|
-| `xs.has("foo")` | Bool — does the key/index exist? |
+| `obj.has_key("foo")` | Bool — does this object key exist? |
+| `xs.has("foo")` | Bool — key/index style existence helper |
 | `xs.includes("foo")` | Bool — is the value present? |
+| `x has y` | Bool — membership/containment operator |
+| `doc.has_path("a.b")` | Bool — does this nested path exist? |
 | `xs.index("foo")` | Number\|null — where? |
 | `xs.indices_of("foo")` | Array — all positions |
 | `xs.find(p)` | A\|null — first matching element |
@@ -97,7 +112,10 @@ OUT:    [1, 3]
 $.user.email.or("no-email@example.com")
 
 # Existence check on key
-$.config.has("aws_region")
+$.config.has_key("aws_region")
+
+# Which required config keys are absent
+$.config.missing("host", "port", "user")
 
 # Index of a value (not the predicate form)
 $.tags.index("admin")
