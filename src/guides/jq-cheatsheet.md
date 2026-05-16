@@ -11,6 +11,13 @@ DOC:    {"users": [{"id": 1, "name": "Ada", "email": "ada@x.com", "active": true
 For users coming from `jq`. Same shape: query JSON in a terminal. Different
 philosophy in places — call this out where it matters.
 
+In the CLI, use `-e` for direct expression execution:
+
+```bash
+jetrocli -e '$.users.filter($.active).map($.email)' < users.json
+jetrocli --ndjson -i events.ndjson -e '$.id'
+```
+
 ## Big differences at a glance
 
 | Topic | jq | jetro |
@@ -23,6 +30,15 @@ philosophy in places — call this out where it matters.
 | Writes | `\|=`, `=`, `del()` | `.set()`, `patch $ {}`, chain-writes |
 | Backend | Single interpreter | Six backends, planner-selected |
 | Caching | None | Plan + path caches in `JetroEngine` |
+
+Jetro favors functional method chains over jq's pipe-of-filters style:
+
+```jetro
+$.users
+  .filter($.active)
+  .map({id: $.id, email: $.email})
+  .take(100)
+```
 
 ## One-liner translations
 
@@ -245,6 +261,28 @@ jetro:  patch $ {x: 1, y: 2, z: DELETE}
 
 jetro fuses these into one document walk. jq evaluates each pipe stage
 independently.
+
+### NDJSON
+
+```bash
+jq:     jaq -c '.id' events.ndjson
+jetro:  jetrocli --ndjson -i events.ndjson -e '$.id'
+```
+
+For whole-file stream operations, use `$.rows()`:
+
+```bash
+jq:     tac events.ndjson | jaq -c 'select(.level == "error"), halt'
+jetro:  jetrocli --ndjson -i events.ndjson \
+          -e '$.rows().reverse().find($.level == "error").first()'
+```
+
+For Kafka compacted-topic dumps:
+
+```bash
+jetrocli --ndjson -i users.topic --payload-after '|' \
+  -e '$.rows().reverse().distinct_by($.id).take(100)'
+```
 
 ## Complex pipeline translations
 
