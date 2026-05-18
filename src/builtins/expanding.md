@@ -40,7 +40,7 @@ recursive flatten of arbitrary structure.
 
 ## `explode`
 
-> ⚠ **0.5.10 status:** `explode` requires an argument
+> ⚠ **0.5.11 status:** `explode` requires an argument
 > (errors with `"explode: missing argument"` on no-arg call). Spec is
 > intended to mirror `chars` / `to_pairs` for the common cases; until then,
 > use those builtins directly.

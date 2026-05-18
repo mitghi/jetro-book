@@ -1,7 +1,7 @@
-# Known Limitations and Behavior Notes (0.5.10)
+# Known Limitations and Behavior Notes (0.5.11)
 
 This page documents current boundaries and intentional language choices for
-jetro 0.5.10. It is not a bug graveyard: fixed audit items have moved back
+jetro 0.5.11. It is not a bug graveyard: fixed audit items have moved back
 into their normal reference pages.
 
 ## Current Boundaries
@@ -61,7 +61,7 @@ it can stop after the first `n` rows without scanning unrelated partitions.
 ### Public observability is still minimal
 
 The engine records internal rows-stream stats for tests and future explain
-output, but 0.5.10 does not expose a stable public `explain()` API yet.
+output, but 0.5.11 does not expose a stable public `explain()` API yet.
 
 ## Intentional Language Choices
 
@@ -123,5 +123,5 @@ legitimately huge rows.
 
 ## Version Note
 
-This page reflects jetro 0.5.10. If a page elsewhere still carries an older
+This page reflects jetro 0.5.11. If a page elsewhere still carries an older
 audit note, prefer this page and the current builtin reference.

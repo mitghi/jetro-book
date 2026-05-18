@@ -14,7 +14,7 @@ Add to `Cargo.toml`:
 
 ```toml
 [dependencies]
-jetro = "0.5.10"
+jetro = "0.5.11"
 ```
 
 The `simd-json` feature is on by default and gives a ~4× cold-start win by
@@ -23,7 +23,7 @@ fall back to the legacy serde-only path:
 
 ```toml
 [dependencies]
-jetro = { version = "0.5.10", default-features = false }
+jetro = { version = "0.5.11", default-features = false }
 ```
 
 Quick sanity check:

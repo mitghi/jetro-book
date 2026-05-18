@@ -1,341 +1,370 @@
-# A 20-Minute Tour
+# A Practical Tour
 
-This tour shows jetro as it is meant to be used: functional JSON querying,
-shape-aware projection, pattern matching, whole-document updates, and fast
-NDJSON workflows. Every example with an `OUT:` block has been checked against
-the current `jetrocli`.
+This tour teaches Jetro the way you will probably use it: grab a real JSON
+payload, ask a precise question, reshape the answer, and move on. Every query in
+this chapter was checked with the release build of `jetrocli 0.2.9`.
 
 Run a query against a JSON file:
 
 ```bash
-jetrocli -e '$.books.count()' < tour.json
+jetrocli -e '$.services.filter(@.enabled).count()' < services.json
 ```
 
-Run a query against NDJSON:
+Run a row-local query against NDJSON:
 
 ```bash
-jetrocli --ndjson -i events.ndjson -e '$.id'
+jetrocli --ndjson -i events.ndjson -e '$.service + ":" + $.level'
 ```
 
-## The document for this tour
+## The Working Document
 
-Save this as `tour.json` if you want to run the examples:
+Save this as `services.json`:
 
 ```json
 {
-  "books": [
-    {"title": "Dune", "year": 1965, "author": {"name": "Herbert"}, "isbn": "9780441172719", "score": 98, "price": 15, "tags": ["sf"]},
-    {"title": "Foundation", "year": 1951, "author": {"name": "Asimov"}, "isbn": "9780553293357", "score": 94, "price": 10, "tags": ["sf", "hugo"]},
-    {"title": "Hyperion", "year": 1989, "author": {"name": "Simmons"}, "isbn": "9780553283686", "score": 96, "price": 18, "tags": ["sf", "hugo"]},
-    {"title": "Snow Crash", "year": 1992, "author": {"name": "Stephenson"}, "isbn": "9780553380958", "score": 91, "price": 12, "tags": ["sf", "cyberpunk"]}
+  "services": [
+    {"name":"api","lang":"rust","latency_ms":42,"owner":"platform","enabled":true,"errors":2,"tags":["edge","json"]},
+    {"name":"worker","lang":"go","latency_ms":85,"owner":"data","enabled":true,"errors":9,"tags":["queue"]},
+    {"name":"admin","lang":"ts","latency_ms":130,"owner":"platform","enabled":false,"errors":0,"tags":["internal"]}
   ],
-  "users": [
-    {"id": 1, "name": "Ada", "active": true, "role": "admin", "email": "ada@example.com"},
-    {"id": 2, "name": "Bob", "active": false, "role": "user"},
-    {"id": 3, "name": "Cy", "active": true, "role": "user", "email": "cy@example.com"}
+  "deploys": [
+    {"service":"api","sha":"a1","status":"ok"},
+    {"service":"worker","sha":"b2","status":"fail"}
   ],
-  "orders": [
-    {"id": 100, "user_id": 1, "total": 120, "status": "paid"},
-    {"id": 101, "user_id": 1, "total": 40, "status": "open"},
-    {"id": 102, "user_id": 3, "total": 80, "status": "paid"}
-  ],
-  "meta": {"active": true, "version": 1}
+  "meta": {"env":"prod","version":7}
 }
 ```
 
-## 1. Path navigation
+## 1. Start With Paths
+
+Use `$` for the root document, then walk fields and indexes.
 
 ```jetro
-QUERY:  $.books[0].title
-OUT:    "Dune"
-
-QUERY:  $.books[-1].title
-OUT:    "Snow Crash"
+QUERY:  $.services[0].name
+OUT:    "api"
 ```
 
-`$` is the root, `.books` is field access, `[0]` is an array index, and
-negative indexes count from the end.
-
-## 2. Wildcards
+Wildcards collect the same field from many array items:
 
 ```jetro
-QUERY:  $.books[*].title
-OUT:    ["Dune","Foundation","Hyperion","Snow Crash"]
+QUERY:  $.services[*].name
+OUT:    ["api","worker","admin"]
 ```
 
-`[*]` selects every array element. It is useful for direct path projection;
-for richer transforms, use `map`.
+## 2. Filter Like You Would In Code
 
-## 3. Functional filters
+Inside `filter`, `map`, and similar methods, `@` is the current item.
 
 ```jetro
-QUERY:  $.books.filter(@.year > 1980).map(@.title)
-OUT:    ["Hyperion","Snow Crash"]
+QUERY:  $.services.filter(@.enabled).count()
+OUT:    2
 ```
 
-Inside `filter`, `map`, `sort`, and similar methods, `@` is the current item.
+That is the basic Jetro shape: start from a path, chain operations, return the
+value you actually need.
 
-## 4. Lambda forms
+## 3. Return A Useful Shape
 
-The lambda forms below are equivalent for this query:
-
-```jetro
-QUERY:  $.books.filter(b => b.year > 1980).map(b => b.title)
-OUT:    ["Hyperion","Snow Crash"]
-```
-
-You can also write:
-
-```jetro
-$.books.filter(@.year > 1980)
-$.books.filter(.year > 1980)
-$.books.filter(lambda b: b.year > 1980)
-```
-
-Use the form that reads best. Single-argument lambdas lower to the same
-effective query shape where legal.
-
-## 5. Reducers
-
-```jetro
-QUERY:  $.books.count()
-OUT:    4
-
-QUERY:  $.books.map(@.year).min()
-OUT:    1951
-
-QUERY:  $.books.map(@.price).avg()
-OUT:    13.75
-```
-
-Reducers consume a stream and return one value.
-
-## 6. Sort, take, and top-N
-
-```jetro
-QUERY:  $.books.sort(b => -b.score).take(2).map(@.title)
-OUT:    ["Dune","Hyperion"]
-```
-
-This reads as “highest score first, keep two, return titles.” The planner can
-use downstream demand such as `take(2)` when a bounded strategy is safe.
-
-## 7. Count by key
-
-```jetro
-QUERY:  $.users.count_by(@.role)
-OUT:    {"admin":1,"user":2}
-```
-
-`count_by`, `group_by`, and `index_by` are barrier-style operators: they need
-to see the input group before producing the aggregate structure.
-
-## 8. Object projection
+Projection objects let you rename fields, drop noise, and compute small derived
+values in one pass.
 
 ```jetro
 QUERY:
-  $.books.map(b => {
-    title: b.title,
-    author: b.author.name,
-    classic: b.year < 1970,
-    tag_count: b.tags.count()
-  })
+  $.services
+    .filter(@.enabled)
+    .map({name: @.name, p95: @.latency_ms, owner: @.owner})
 OUT:
   [
-    {"author":"Herbert","classic":true,"tag_count":1,"title":"Dune"},
-    {"author":"Asimov","classic":true,"tag_count":2,"title":"Foundation"},
-    {"author":"Simmons","classic":false,"tag_count":2,"title":"Hyperion"},
-    {"author":"Stephenson","classic":false,"tag_count":2,"title":"Snow Crash"}
+    {"name":"api","owner":"platform","p95":42},
+    {"name":"worker","owner":"data","p95":85}
   ]
 ```
 
-Projection is ordinary expression syntax, so fields can be renamed, nested,
-computed, and mixed freely.
+This is where Jetro starts paying rent in developer workflows: the output is
+already shaped for the next command, dashboard, test assertion, or API boundary.
 
-## 9. Predicates and missing fields
+## 4. Sort, Bound, Then Project
 
-```jetro
-QUERY:  $.users.map(u => {name: u.name, has_email: u.has_key("email")})
-OUT:    [{"has_email":true,"name":"Ada"},{"has_email":false,"name":"Bob"},{"has_email":true,"name":"Cy"}]
-
-QUERY:  $.users.map(u => {name: u.name, missing: u.missing("email", "role")})
-OUT:    [{"missing":[],"name":"Ada"},{"missing":["email"],"name":"Bob"},{"missing":[],"name":"Cy"}]
-```
-
-Use `has_key` for object-key existence, `includes` for value membership, and
-`missing` for schema checks.
-
-## 10. Pattern matching
+Use `sort_by`, `take`, and `map` for top-N questions.
 
 ```jetro
 QUERY:
-  $.books.map(book => {
-    title: book.title,
-    label: match book with {
-      {tags: ["sf", "cyberpunk"]} -> "cyberpunk",
-      {year: y} when y < 1970 -> f"classic {y}",
-      _ -> "modern"
-    }
-  })
+  $.services
+    .filter(@.enabled)
+    .sort_by(-latency_ms)
+    .take(1)
+    .map({service: name, alert: errors > 5})
 OUT:
   [
-    {"label":"classic 1965","title":"Dune"},
-    {"label":"classic 1951","title":"Foundation"},
-    {"label":"modern","title":"Hyperion"},
-    {"label":"cyberpunk","title":"Snow Crash"}
+    {"alert":true,"service":"worker"}
   ]
 ```
 
-Patterns are checked top-down. Put specific arms before broad fallback arms.
+The minus sign sorts descending by latency. `take(1)` makes the intended demand
+explicit: you only want the worst enabled service.
 
-## 11. Deep search
+## 5. Aggregate When A List Is Too Much
 
-```jetro
-QUERY:  $..find(@.isbn == "9780553293357")[0].title
-OUT:    "Foundation"
-```
-
-`$..find(...)` walks descendants and collects matches. Deep queries can use
-structural indexing when the source was loaded from bytes.
-
-## 12. Pipe and ternary
+Reducers consume a sequence and return a single value.
 
 ```jetro
-QUERY:  $.books.count() | "found " + (@ as string) + " books"
-OUT:    "found 4 books"
+QUERY:  $.services.map(@.latency_ms).avg()
+OUT:    85.66666666666667
 ```
 
-`|` passes the left value into the right expression as `@`. It is value flow,
-not method dispatch.
-
-## 13. F-strings
+Group-style reducers return summaries that are easy to scan:
 
 ```jetro
-QUERY:  $.books.map(b => f"{b.title} ({b.year})")
-OUT:    ["Dune (1965)","Foundation (1951)","Hyperion (1989)","Snow Crash (1992)"]
+QUERY:  $.services.count_by(@.owner)
+OUT:    {"data":1,"platform":2}
 ```
 
-F-strings are useful for labels, logs, CSV-ish output, and report fields.
+## 6. Build Operator-Friendly Strings
 
-## 14. Batched document update
+F-strings are useful for logs, labels, report fields, and shell output.
 
 ```jetro
 QUERY:
-  $.update({
-    "books[*].tags": @.append("tour"),
-    "books[*].reviewed": true,
-    "meta.version": @ + 1
-  })
+  $.services
+    .filter(@.errors > 0)
+    .map(f"{@.name}: {@.errors} errors")
+OUT:
+  ["api: 2 errors","worker: 9 errors"]
 ```
 
-`update` returns the full document. Compatible rooted writes are planned
-together, so shared ancestors can be cloned once and rewritten in one batch.
+## 7. Classify Data With Pattern Matching
 
-## 15. Conditional update
+Pattern matching is a good fit for status payloads, event kinds, and tagged
+objects.
 
 ```jetro
-QUERY:  $.books[* if year > 1980].update({tags: tags.append("modern")})
+QUERY:
+  $.deploys.map(d => match d with {
+    {status:"fail",service:s} -> f"rollback {s}",
+    {status:"ok",service:s} -> f"ship {s}",
+    _ -> "inspect"
+  })
+OUT:
+  ["ship api","rollback worker"]
 ```
 
-Filtered wildcards let updates target many items without writing a host loop.
-The result is still the full document with untouched subtrees preserved.
+Arms are checked top-down. Put specific cases before the fallback arm.
 
-## 16. NDJSON row-local mode
+## 8. Search Deeply When The Path Is Not Stable
 
-For this file:
+When you know the condition but not the exact location, use recursive descent.
+
+```jetro
+QUERY:  $..find(@.status == "fail")
+OUT:
+  [
+    {"service":"worker","sha":"b2","status":"fail"}
+  ]
+```
+
+For known schemas, prefer direct paths. For exploratory work over unfamiliar
+payloads, deep search is often the fastest way to ask the first question.
+
+## 9. Patch Documents
+
+`update` returns the full document with the selected changes applied.
+
+```jetro
+QUERY:  $.update({"meta.version": @ + 1, "services[*].checked": true})
+OUT:
+  {
+    "deploys":[
+      {"service":"api","sha":"a1","status":"ok"},
+      {"service":"worker","sha":"b2","status":"fail"}
+    ],
+    "meta":{"env":"prod","version":8},
+    "services":[
+      {"checked":true,"enabled":true,"errors":2,"lang":"rust","latency_ms":42,"name":"api","owner":"platform","tags":["edge","json"]},
+      {"checked":true,"enabled":true,"errors":9,"lang":"go","latency_ms":85,"name":"worker","owner":"data","tags":["queue"]},
+      {"checked":true,"enabled":false,"errors":0,"lang":"ts","latency_ms":130,"name":"admin","owner":"platform","tags":["internal"]}
+    ]
+  }
+```
+
+The object keys are paths to update. The expression on the right is evaluated
+against the value at that path, so `"meta.version": @ + 1` increments the
+current version.
+
+## 10. Row-Local NDJSON
+
+Save this as `events.ndjson`:
 
 ```ndjson
-{"id":1,"name":"Ada","active":true}
-{"id":2,"name":"Bob","active":false}
-{"id":3,"name":"Cy","active":true}
+{"ts":"10:00","service":"api","level":"info","ms":38}
+{"ts":"10:01","service":"worker","level":"error","ms":220}
+{"ts":"10:02","service":"api","level":"error","ms":91}
 ```
 
 Run:
 
 ```bash
-jetrocli --ndjson -i events.ndjson -e '$.id'
+jetrocli --ndjson -i events.ndjson -e '$.service + ":" + $.level'
 ```
 
 Output:
 
 ```ndjson
-1
-2
-3
+"api:info"
+"worker:error"
+"api:error"
 ```
 
-Without `$.rows()`, NDJSON mode evaluates the expression once per row.
+Without `$.rows()`, NDJSON mode evaluates the expression once per line.
 
-## 17. Whole-stream NDJSON with `$.rows()`
+## 11. Whole-Stream NDJSON
+
+Use `$.rows()` when the expression should see the NDJSON file as one stream.
 
 ```bash
 jetrocli --ndjson -i events.ndjson \
-  -e '$.rows().filter($.active).map({id: $.id, name: $.name})'
+  -e '$.rows().filter($.level == "error").map({service: $.service, ms: $.ms})'
 ```
 
 Output:
 
 ```ndjson
-{"id":1,"name":"Ada"}
-{"id":3,"name":"Cy"}
+{"service":"worker","ms":220}
+{"service":"api","ms":91}
 ```
 
-`$.rows()` switches from row-local evaluation to one expression over the whole
-stream.
+This is the mode for file-level filtering, slicing, grouping, latest-record
+queries, and compacted-topic inspection.
 
-## 18. Reverse NDJSON for compacted topics
+## 12. Latest Record Per Key
 
 For Kafka-style records where the payload starts after `|`:
 
 ```text
-1|{"id":1,"name":"Ada old","active":false}
-2|{"id":2,"name":"Bob","active":true}
-1|{"id":1,"name":"Ada","active":true}
+1|{"id":1,"name":"api old","active":false}
+2|{"id":2,"name":"worker","active":true}
+1|{"id":1,"name":"api","active":true}
 ```
 
 Run:
 
 ```bash
-jetrocli --ndjson -i users.topic --payload-after '|' -e '
-  $.rows()
-    .reverse()
-    .distinct_by($.id)
-    .filter($.active)
-    .map({id: $.id, name: $.name})
-'
+jetrocli --ndjson -i topic.ndjson --payload-after '|' \
+  -e '$.rows().reverse().distinct_by($.id).filter($.active).map({id: $.id, name: $.name})'
 ```
 
 Output:
 
 ```ndjson
-{"id":1,"name":"Ada"}
-{"id":2,"name":"Bob"}
+{"id":1,"name":"api"}
+{"id":2,"name":"worker"}
 ```
 
-This is built for compacted-topic inspection: scan newest-to-oldest,
-keep the first row for each key, and discard older duplicates.
+Read from the end, keep the first row for each id, then filter and project.
+That is a compacted-topic audit query in one expression.
 
-## 19. Demand-aware execution
+## A Few Power Moves
+
+The tour above keeps to the common path. These examples are worth knowing once
+you start writing longer queries.
+
+### Lambda Forms
+
+The shorthand `@` form is usually enough, but named lambdas are useful when an
+expression gets dense:
+
+```jetro
+QUERY:  $.services.filter(s => s.latency_ms > 80).map(s => s.name)
+OUT:    ["worker","admin"]
+```
+
+These forms are equivalent where a single current item is in scope:
+
+```jetro
+$.services.filter(@.enabled)
+$.services.filter(.enabled)
+$.services.filter(lambda s: s.enabled)
+```
+
+### Schema Checks
+
+Use `has_key` for object-key existence, `includes` for value membership, and
+`missing` for compact schema checks:
+
+```jetro
+QUERY:
+  $.services.map(s => {
+    name: s.name,
+    has_json_tag: s.tags.includes("json"),
+    missing: s.missing("owner", "tags", "runtime")
+  })
+OUT:
+  [
+    {"has_json_tag":true,"missing":["runtime"],"name":"api"},
+    {"has_json_tag":false,"missing":["runtime"],"name":"worker"},
+    {"has_json_tag":false,"missing":["runtime"],"name":"admin"}
+  ]
+```
+
+### Guards In Pattern Matching
+
+Patterns can bind fields, and guards can refine the match:
+
+```jetro
+QUERY:
+  $.services.map(s => match s with {
+    {enabled:false,name:n} -> f"disabled {n}",
+    {latency_ms:ms,name:n} when ms > 100 -> f"slow {n}",
+    {name:n} -> f"ok {n}"
+  })
+OUT:
+  ["ok api","ok worker","disabled admin"]
+```
+
+### Pipe Value Flow
+
+`|` passes the value on the left into the right expression as `@`. It is value
+flow, not method dispatch:
+
+```jetro
+QUERY:  $.services.count() | "found " + (@ as string) + " services"
+OUT:    "found 3 services"
+```
+
+### Conditional Updates
+
+Filtered wildcards let updates target many items without writing a host loop:
+
+```jetro
+QUERY:
+  $.services[* if errors > 5].update({
+    tags: tags.append("hot"),
+    checked: true
+  })
+```
+
+The result is still the full document with untouched subtrees preserved.
+
+### Demand-Aware Queries
 
 These are ordinary queries:
 
 ```jetro
-$.books.map(@.isbn).last()
-$.books.filter(@.score > 95).first()
-$.books.sort(b => -b.score).take(2)
+$.services.map(@.name).last()
+$.services.filter(@.enabled).first()
+$.services.sort_by(-latency_ms).take(2)
 ```
 
 Jetro plans from the demanded result backward. Pure one-to-one maps can be
 delayed, `first` and `take` can bound input, and tape-backed sources can avoid
 materializing values until a stage actually needs them.
 
-## 20. Rust embedding
+### Rust Embedding
 
 Use the small facade for one document:
 
 ```rust
 let j = jetro::Jetro::from_bytes(bytes)?;
-let out = j.collect("$.books.filter(@.year > 1980).map(@.title)")?;
+let out = j.collect("$.services.filter(@.enabled).map(@.name)")?;
 ```
 
 Use `JetroEngine` when you want a long-lived engine with plan and VM reuse:
@@ -345,14 +374,15 @@ use jetro::JetroEngine;
 use serde_json::json;
 
 let eng = JetroEngine::default();
-let doc = json!({"x":[1,2,3,4,5]});
-let v = eng.collect_value(doc, "$.x.filter(@ > 2).sum()")?;
-assert_eq!(v, json!(12));
+let doc = json!({"services":[{"latency_ms":42},{"latency_ms":85}]});
+let v = eng.collect_value(doc, "$.services.map(@.latency_ms).sum()")?;
+assert_eq!(v, json!(127));
 ```
 
-## What to read next
+## What To Read Next
 
-The tour covered the surface area. For depth:
+You now have the core mental model: path, chain, project, reduce, patch, and
+stream.
 
 - [Grammar Overview](./grammar/overview.md)
 - [Builtin Reference](./builtins/overview.md)
