@@ -60,5 +60,5 @@
 # Appendix
 
 - [Public API and Engine](./reference/public-api.md)
-- [Known Limitations (0.5.10)](./reference/limitations.md)
+- [Known Limitations (0.5.11)](./reference/limitations.md)
 - [Glossary](./reference/glossary.md)

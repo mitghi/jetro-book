@@ -36,7 +36,7 @@ This is the cheapest reducer — the source skips deserialisation entirely.
 
 ## `approx_count_distinct`
 
-> ⚠ **Not yet supported in 0.5.10** — runtime returns `"ApproxCountDistinct:
+> ⚠ **Not yet supported in 0.5.11** — runtime returns `"ApproxCountDistinct:
 > builtin unsupported"`. Spec exists; HyperLogLog backend pending.
 
 - **Signature (planned):** `Array<Any> -> Number`

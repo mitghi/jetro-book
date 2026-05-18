@@ -66,7 +66,7 @@ node's identity (e.g. "stop at leaves of kind X").
 
 ## `rec(pattern, fn)`
 
-> ⚠ **Limited in 0.5.10** — recursive rewrites are guarded with a 10 000
+> ⚠ **Limited in 0.5.11** — recursive rewrites are guarded with a 10 000
 > iteration cap. Prefer `walk` or `walk_pre` for one-pass document traversal,
 > and keep `rec` for bounded fixpoint-style rewrites.
 

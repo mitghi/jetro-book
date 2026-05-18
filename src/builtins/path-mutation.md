@@ -60,7 +60,7 @@ QUERY:  $.del_paths(["user/secret", "user/temp", "session/csrf"])
 
 - **Signature:** `Any, String -> Bool`
 - **Behavior:** True if a path exists and resolves to a non-null value.
-  Current 0.5.10 behavior treats a present `null` like a missing path:
+  Current 0.5.11 behavior treats a present `null` like a missing path:
 
 ```jetro
 DOC:    {"a": null}

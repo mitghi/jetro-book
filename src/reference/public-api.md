@@ -118,7 +118,7 @@ To disable simd-json:
 
 ```toml
 [dependencies]
-jetro = { version = "0.5.10", default-features = false }
+jetro = { version = "0.5.11", default-features = false }
 ```
 
 ## Python binding
